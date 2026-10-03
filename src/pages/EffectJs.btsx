@@ -1,4 +1,68 @@
-import PageHolder from "@/components/PageHolder.btsx"
+import { Link } from '@octanejs/tanstack-router'
+import './effect-cover.css'
 
 props {}:{}
-PageHolder(href="/gym/effect-js")
+section(className="effect-cover" aria-labelledby="module-title")
+  header(className="effect-cover-top")
+    Link(to="/gym" className="effect-cover-back") ← Gym
+    span(className="effect-cover-mono") TRAINING MODULE / 01
+  div(className="effect-cover-body")
+    div(className="effect-cover-story")
+      p(className="effect-cover-mono effect-cover-edition") TYPESCRIPT · EFFECT 4
+      h1#module-title
+        span Effect.
+        span(className="effect-cover-title-secondary") Think in programs.
+      p(className="effect-cover-description") A hands-on field guide to reliable TypeScript. Learn to describe work, handle failure, and build workflows you can reason about.
+      div(className="effect-cover-facts" aria-label="Module details")
+        div
+          strong 08
+          span guided lessons
+        div
+          strong ~70
+          span minutes of practice
+        div
+          strong 01
+          span complete workflow
+    div(className="effect-cover-diagram" aria-label="An Effect describes success, failure, and requirements")
+      div(className="effect-cover-diagram-heading")
+        span(className="effect-cover-mono") THE SHAPE OF A PROGRAM
+        span(className="effect-cover-diagram-mark" aria-hidden="true") ↗
+      p(className="effect-cover-signature")
+        span Effect
+        span(className="effect-cover-angle") <
+        span A, E, R
+        span(className="effect-cover-angle") >
+      dl(className="effect-cover-types")
+        div
+          dt A
+          dd
+            strong Success
+            span What your program produces.
+        div
+          dt E
+          dd
+            strong Failure
+            span What can go wrong, explicitly.
+        div
+          dt R
+          dd
+            strong Requirements
+            span What your program needs to run.
+      p(className="effect-cover-diagram-note") Describe it. Compose it. Run it.
+  div(className="effect-cover-outline")
+    div
+      span(className="effect-cover-mono") 01 / THE FOUNDATIONS
+      p Execution, composition & typed errors
+    div
+      span(className="effect-cover-mono") 02 / THE BUILDING BLOCKS
+      p Schema, services & resource lifetimes
+    div
+      span(className="effect-cover-mono") 03 / PUT IT TO WORK
+      p Concurrency & a retryable workflow
+  footer(className="effect-cover-footer")
+    div
+      p(className="effect-cover-footer-heading") Learn by doing. One rep at a time.
+      p Edit inputs, inspect real results, and check your understanding. Your progress stays in this browser.
+    Link(to="/gym/effect-js/lessons" className="effect-cover-start")
+      span(className='text-white text-base tracking-wide') Start the training
+      span(aria-hidden="true" className='text-3xl text-white flex items-center -mt-1') ⤍

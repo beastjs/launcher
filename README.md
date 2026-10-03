@@ -98,3 +98,29 @@ an HTTP endpoint in Vite.
 ```ts
 import { Button } from "@octanejs/base-ui/button";
 ```
+
+## Vendored reference repositories
+
+`repos/` is reference material only. Import runtime code from installed packages
+such as `effect`. TypeScript excludes the subtree from project discovery; the
+import guard also rejects explicit imports (including type-only imports) into it.
+Vite enforces the guard during development and builds and denies serving files
+from `repos/`.
+
+Run `bun run check:imports` to check the boundary independently. It also runs
+first in `bun run check`. Guard tests: `bun test scripts/checks`.
+
+See [Effect Schema patterns](agent-patterns/effect-schema.md) for examples adapted
+from the vendored Effect 4 sources and validated with the installed dependency.
+
+## Effect training
+
+Open `/gym/effect-js` from Gym for the module cover, then choose **Start training**
+to open `/gym/effect-js/lessons` for eight guided Effect 4 lessons: lazy execution,
+composition, typed failures, Schema codecs, Context and Layer, resource cleanup,
+bounded concurrency, and a validation/retry capstone. Edit each lab’s input,
+run the real installed Effect runtime, inspect the result and execution trace,
+then answer the checkpoint to mark the lesson complete. Progress is saved in
+this browser. Examples are read-only; the capstone save is simulated locally.
+
+Training checks: `bun test tests/effect-training.test.ts`.

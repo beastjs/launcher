@@ -30,6 +30,7 @@
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --topbar-height: 64px;
   --text-2xs: 10px;
+  --surface: var(--surface);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
@@ -103,10 +104,11 @@
 
 :root {
   color-scheme: light;
-  --surface: oklch(0.998 0 0);
+  --surface: oklch(0.971 0.004 286.33);
+  --sunken: oklch(0.97 0.001 286.38);
   --soft: oklch(0.2046 0 0 / 50%);
   --muted: oklch(0.9401 0 0);
-  --muted-foreground: oklch(0.54 0 0);
+  --muted-foreground: oklch(0.5373 0.006 240.53);
   --border: oklch(0.65 0 0);
   --primary: oklch(0.2046 0 0);
   --positive: oklch(0.72 0.17 155.61);
@@ -154,6 +156,8 @@
 .dark {
   color-scheme: dark;
   --soft: oklch(0.9461 0 0 / 50%);
+  --surface: oklch(0.309 0 89.88);
+  --sunken: oklch(0.281 0 89.88);
   --background: oklch(0.1638 0 0);
   --foreground: oklch(0.9547 0.02 222.79);
   --card: oklch(0.205 0 0);
@@ -165,7 +169,7 @@
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.2393 0 0);
-  --muted-foreground: oklch(0.7 0 0);
+  --muted-foreground: oklch(0.7824 0.016 240.53);
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
@@ -187,7 +191,7 @@
   --sidebar-ring: oklch(0.556 0 0);
   --line: oklch(0.3052 0 0);
   --accent: oklch(0.6161 0.2094 256.24);
-  --focus: oklch(0.839 0.12 73.67);
+  --focus: oklch(0.856 0.16 133.26);
   --destructive-foreground: var(--color-red-600);
   --success: var(--color-emerald-500);
   --success-foreground: var(--color-emerald-600);

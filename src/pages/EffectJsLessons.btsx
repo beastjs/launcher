@@ -1,0 +1,153 @@
+import { useEffect, useRef, useState } from 'octane'
+import { Link } from '@octanejs/tanstack-router'
+import { lessons, readProgress, trainingStorageKey, type LabResult } from '@/lib/effect-training'
+import TypeScriptCode from '@/components/TypeScriptCode.btsx'
+import LabOutput from '@/components/LabOutput.btsx'
+import './effect-training.css'
+
+props {}:{}
+setup
+  const [selected, setSelected] = useState(0)
+  const [input, setInput] = useState(lessons[0].initial)
+  const [output, setOutput] = useState<LabResult | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [running, setRunning] = useState(false)
+  const [choice, setChoice] = useState<number | null>(null)
+  const [checked, setChecked] = useState(false)
+  const [completed, setCompleted] = useState<string[]>(() => { try { return readProgress(localStorage.getItem(trainingStorageKey)) } catch { return [] } })
+  const [storageNotice, setStorageNotice] = useState(false)
+  const generation = useRef(0)
+  const lesson = lessons[selected]
+  const correct = checked && choice === lesson.answer
+  const done = completed.includes(lesson.id)
+  const percent = Math.round(completed.length / lessons.length * 100)
+  const chooseLesson = (index: number) => {
+    generation.current++
+    setSelected(index)
+    setInput(lessons[index].initial)
+    setOutput(null)
+    setError(null)
+    setRunning(false)
+    setChoice(null)
+    setChecked(false)
+  }
+  const run = async () => {
+    const token = ++generation.current
+    setRunning(true)
+    setError(null)
+    setOutput(null)
+    try {
+      const value = await lesson.run(input)
+      if (token === generation.current) setOutput(value)
+    } catch (cause) {
+      if (token === generation.current) setError(cause instanceof Error ? cause.message : String(cause))
+    } finally {
+      if (token === generation.current) setRunning(false)
+    }
+  }
+  const complete = () => {
+    if (correct && output && !done) setCompleted(current => [...current, lesson.id])
+  }
+  useEffect(() => {
+    try { localStorage.setItem(trainingStorageKey, JSON.stringify(completed)); setStorageNotice(false) } catch { setStorageNotice(true) }
+  }, [completed])
+  useEffect(() => () => { generation.current++ }, [])
+
+section(className="effect-camp")
+  header(className="camp-header" style='line-height: 12px')
+    div(className="camp-breadcrumb" style="margin-bottom: 13px")
+      Link(to="/gym") Gym
+      span(aria-hidden="true") /
+      Link(to="/gym/effect-js") Effect training
+      span(aria-hidden="true") /
+      span Lessons
+    div(className="camp-heading-row")
+      div
+        p(className="camp-intro") MODULE 01A &middot; EFFECT v4
+      div(className="camp-course-stat")
+        strong #{`${completed.length.toString().padStart(2, '0')} / 08`}
+    div(className="camp-progress" role="progressbar" aria-label="Course progress" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100} style={{ ...({ ...({ ...({}), "margin-top": "15px" }), "margin-top": "12px" }), "margin-top": "10px" }})
+      div(style={{ width: `${percent}%` }})
+    div(className="camp-meta")
+      span 8 lessons · about 70 minutes · basic TypeScript assumed
+      span Progress saved in this browser
+    if storageNotice
+      p(className="camp-notice" role="status") Browser storage is unavailable. Progress will last for this visit.
+    if completed.length === lessons.length
+      div(className="camp-graduated" role="status") All eight checkpoints complete. Next rep: build a real service with a Layer, Schema validation, and resource cleanup. We can work through it together.
+  div(className="camp-layout")
+    aside(className="camp-syllabus")
+      p(className="camp-eyebrow") YOUR TRAINING PATH
+      nav(aria-label="Effect lessons")
+        each item, index in lessons key item.id
+          button(type="button" className={"camp-lesson-button " + (selected === index ? 'is-active' : '')} aria-current={selected === index ? 'step' : undefined} onClick={() => chooseLesson(index)} style={{ ...({ ...({ ...({}), "padding-bottom": "10px" }), "padding-bottom": "9px" }), "padding-top": "10px" }})
+            span(className={"camp-step " + (completed.includes(item.id) ? 'is-done' : '')}) #{completed.includes(item.id) ? '✓' : (index + 1).toString().padStart(2, '0')}
+            span(className="camp-lesson-label")
+              strong(style={{ ...({}), "font-size": "14px" }}) #{item.title}
+              small #{`${item.minutes} min · ${completed.includes(item.id) ? 'Complete' : item.subtitle}`}
+      div(className="camp-coach-note")
+        span(className="camp-eyebrow") TRAIN WITH ME
+        p Predict the result before you run. Then explain what changed. Bring me your trace and we’ll work through the next rep together.
+    div(className="camp-main")
+      article(className="camp-lesson" aria-labelledby="lesson-heading")
+        div(className="camp-lesson-kicker")
+          span(className="camp-eyebrow") #{`LESSON ${(selected + 1).toString().padStart(2, '0')} / 08`}
+          span(className="camp-time") #{`${lesson.minutes} MIN`}
+        h2#lesson-heading #{lesson.title}
+        p(className="camp-subtitle") #{lesson.subtitle}
+        p(className="camp-concept") #{lesson.concept}
+        div(className="camp-model")
+          span(className="camp-eyebrow") MENTAL MODEL
+          p #{lesson.model}
+      section(className="camp-lab" aria-labelledby="lab-heading")
+        div(className="camp-section-heading")
+          h3#lab-heading The practice rep
+          span(className="camp-pill") LIVE EFFECT RUNTIME
+        p(className="camp-task") #{lesson.task}
+        div(className="camp-workbench")
+          div(className="camp-code-panel")
+            div(className="camp-panel-bar")
+              span example.ts
+              span Read-only example
+            TypeScriptCode(source={lesson.code} className="camp-code")
+          div(className="camp-console")
+            label(for="lab-input" className="camp-input-label") #{lesson.inputLabel}
+            textarea#lab-input(value={input} rows={lesson.initial.includes('\n') ? 7 : 3} spellCheck={false} disabled={running} onInput={(event: Event) => { setInput((event.currentTarget as HTMLTextAreaElement).value); setOutput(null); setError(null) }} className="camp-input")
+            p(className="camp-input-help") Edit the lab input above. The example shows the starting values; Run uses your current input.
+            button(type="button" className="camp-run" disabled={running} onClick={() => void run()}) #{running ? 'Running…' : 'Run the program →'}
+            div(className="camp-output" aria-live="polite" aria-busy={running})
+              div(className="camp-output-title")
+                span OUTPUT
+                span #{output ? 'FINISHED' : running ? 'RUNNING' : error ? 'INPUT ERROR' : 'READY'}
+              LabOutput(output={output} error={error} running={running})
+      section(className="camp-checkpoint" aria-labelledby="checkpoint-heading")
+        div(className="camp-section-heading")
+          h3#checkpoint-heading Check your understanding
+          span(className="camp-pill") CHECKPOINT
+        fieldset(className="camp-question")
+          legend #{lesson.question}
+          each answer, index in lesson.choices key index
+            label(className={"camp-answer " + (choice === index ? 'is-selected' : '')})
+              input(type="radio" name="checkpoint" value={index} checked={choice === index} onChange={() => { setChoice(index); setChecked(false) }})
+              span #{answer}
+        div(className="camp-check-actions")
+          button(type="button" className="camp-secondary-button" disabled={choice === null} onClick={() => setChecked(true)}) Check answer
+          if done
+            span(className="camp-complete-label") ✓ Lesson complete
+        if checked
+          div(className={"camp-feedback " + (correct ? 'is-correct' : '')} role="status")
+            strong #{correct ? 'You’ve got it.' : 'Another rep. Think it through.'}
+            p #{correct ? lesson.explanation : 'Re-read the mental model and compare it with the execution trace. Try another answer.'}
+        if correct
+          div(className="camp-takeaway")
+            span(className="camp-eyebrow") TAKE THIS WITH YOU
+            p #{lesson.takeaway}
+      footer(className="camp-footer")
+        div
+          p #{done ? 'Keep experimenting. The lab stays open.' : 'Run the lab and pass the checkpoint to complete this lesson.'}
+          if !done
+            button(type="button" className="camp-run" disabled={!correct || !output} onClick={complete}) Mark lesson complete ✓
+        if selected < lessons.length - 1
+          button(type="button" className="camp-secondary-button" onClick={() => chooseLesson(selected + 1)}) Next lesson →
+        else
+          Link(to="/gym" className="camp-secondary-button") Back to Gym

@@ -4,7 +4,7 @@ import "@danfessler/trellis/style.css"
 import "./trellis-demo.css"
 import { useEffect, useRef, useState } from "octane"
 import { openDoc } from "./ws"
-import { useTheme } from "./ThemeProvider.btsx"
+import { useTheme } from "@/lib/theme-context"
 import { compactTrellisStyle, defaultTrellisStyle, loadTrellisStyle, saveTrellisStyle, spaciousTrellisStyle, trellisStyleOptions, type DemoNavigation, type DemoTheme, type TrellisStyleSettings } from "./trellis-settings"
 
 props { }: { }

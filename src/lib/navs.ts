@@ -31,7 +31,7 @@ export const navGroups: NavGroup[] = [
       },
       {
         href: '/converters',
-        icon: 'mechanics',
+        icon: 'search',
         label: 'Converters',
         short: 'Converters',
         description: 'Media Converters',
@@ -40,7 +40,7 @@ export const navGroups: NavGroup[] = [
       },
       {
         href: '/icons',
-        icon: 'new-folder',
+        icon: 'search',
         label: 'Icons',
         short: 'Icons',
         description: 'My Icons',
@@ -49,7 +49,7 @@ export const navGroups: NavGroup[] = [
       },
       {
         href: '/gym',
-        icon: 'arrow-left',
+        icon: 'search',
         label: 'Gym',
         short: 'Gym',
         description: 'My Gym',
@@ -63,7 +63,7 @@ export const navGroups: NavGroup[] = [
     items: [
       {
         href: 'https://beast-docs-adv.beastjs.workers.dev',
-        icon: 'beast',
+        icon: 'search',
         label: 'Beast Docs',
         short: 'Beast Docs',
         description: 'Beast Developer Docs',
@@ -83,7 +83,7 @@ export const branches: NavGroup[] = [
         value: 'install',
         href: 'install',
         label: 'Installation',
-        icon: 'folder',
+        icon: 'search',
         description: 'settings',
         tags: ['tags']
       },
@@ -92,7 +92,7 @@ export const branches: NavGroup[] = [
         value: 'quick',
         href: 'quick',
         label: 'Quick start',
-        icon: 'folder',
+        icon: 'search',
         description: 'settings',
         tags: ['tags']
       },
@@ -101,7 +101,7 @@ export const branches: NavGroup[] = [
         value: 'config',
         href: 'config',
         label: 'Configuration',
-        icon: 'folder',
+        icon: 'search',
         description: 'settings',
         tags: ['tags']
       }
@@ -115,7 +115,7 @@ export const branches: NavGroup[] = [
         value: 'buttons',
         href: 'buttons',
         label: 'Buttons',
-        icon: 'folder',
+        icon: 'search',
         description: 'settings',
         tags: ['tags']
       },
@@ -124,7 +124,7 @@ export const branches: NavGroup[] = [
         value: 'overlays',
         href: 'overlays',
         label: 'Overlays',
-        icon: 'folder',
+        icon: 'search',
         description: 'settings',
         tags: ['tags']
       }

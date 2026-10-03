@@ -4,6 +4,7 @@ import { fetchAndCacheMetadata, fetchCollections, prefetchIconSet } from '@/hook
 import { useIconMeta } from '@/hooks/use-icon-meta'
 import { validIconSetId, type IconCollections } from '@/lib/iconify'
 import IconShell from '@/components/IconShell.btsx'
+import PasteSvgOptimizer from '@/components/PasteSvgOptimizer.btsx'
 import Button from '@/components/ui/Button.btsx'
 import HyperList from '@/components/ui/HyperList.btsx'
 import { Icon } from '@/lib/icons'
@@ -109,6 +110,7 @@ section(className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-12")
     h1(className="text-3xl font-semibold tracking-tight") Icon Sets
     p(className="mt-3 text-sm leading-6 text-muted-foreground") Browse your favorite collections and copy SVGs or Beast icon symbols.
     Link(to="/icons/favorites" className="mt-4 inline-flex rounded-lg bg-secondary px-4 py-2 text-xs font-medium hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring") #{`Favorites (${favorites.length})`}
+  PasteSvgOptimizer
   div(className="mb-8 max-w-xl")
     label(for="icon-set-id" className="mb-2 block text-xs text-muted-foreground") Add an icon set
     div(className="flex items-start gap-2")

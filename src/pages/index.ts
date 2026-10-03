@@ -7,4 +7,5 @@ import IconFavorites from './IconFavorites.btsx'
 import IconDetail from './IconDetail.btsx'
 import Gym from './Gym.btsx'
 import EffectJs from './EffectJs.btsx'
-export { Home, Converters, ImageConverter, Icons, IconSet, IconFavorites, IconDetail, Gym, EffectJs }
+import EffectJsLessons from './EffectJsLessons.btsx'
+export { Home, Converters, ImageConverter, Icons, IconSet, IconFavorites, IconDetail, Gym, EffectJs, EffectJsLessons }

@@ -1,0 +1,10 @@
+import { useMemo } from 'octane'
+import { highlightTypeScript } from '@/lib/syntax-highlight'
+
+props { source, className }: { source: string; className?: string }
+setup
+  const tokens = useMemo(() => highlightTypeScript(source), [source])
+pre(className={className} tabIndex={0} aria-label="TypeScript example")
+  code
+    each token, index in tokens key index
+      span(style={token.style}) #{token.content}

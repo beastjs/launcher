@@ -2,6 +2,7 @@ import { useEffect, useState } from "octane";
 import { Outlet, useLocation } from "@octanejs/tanstack-router";
 import MobileSidebar from "@/components/MobileSidebar.btsx";
 import { SidebarNav } from "@/components/Sidebar.btsx";
+import ThemeProvider from "../components/ThemeProvider.btsx";
 
 props {}:{}
 setup

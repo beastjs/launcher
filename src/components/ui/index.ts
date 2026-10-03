@@ -1,3 +1,3 @@
-import Button from './Button.btsx'
+import Button, { buttonVariants } from './Button.btsx'
 import Drawer from './Drawer.btsx'
-export { Button, Drawer }
+export { Button, buttonVariants, Drawer }

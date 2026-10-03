@@ -28,10 +28,10 @@ fragment
     Topbar(toggleSidebar={toggleCompact} toggleExtra={toggleBranched} isCompact={isCompact})
   Group(orientation="horizontal" defaultLayout={defaultLayout} onLayoutChanged={onLayoutChanged} style={{ height: 'calc(100dvh - var(--topbar-height))' }} className="overflow-hidden")
     Panel(id="sidebar" panelRef={sidebarRef} defaultSize="200px" minSize="200px" maxSize="300px" collapsible collapsedSize="64px" onResize={syncCompact})
-      if (branched)
-        Sidebar(path={path} isCompact={isCompact})
-      else
-        Branched(path={path} isCompact={isCompact})
+      // if (branched)
+      // else
+      Sidebar(path={path} isCompact={isCompact})
+      // Branched(path={path} isCompact={isCompact})
     Separator(aria-label="Resize sidebar" className={SEPARATOR_CLASS})
     Panel(id="content" minSize="30%")
       div(className='flex h-full min-h-0 flex-col overflow-y-auto')

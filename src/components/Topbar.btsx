@@ -1,9 +1,8 @@
 import { cn } from "@/lib/utils"
-import { Icon } from '@/lib/icons';
 import Button from "./ui/Button.btsx";
-import { ThemeToggle } from "./ThemeProvider.btsx";
 import { Link } from "@octanejs/tanstack-router";
-import { type ReactNode } from "octane";
+import { type ReactNode, useState } from "octane";
+
 
 module
   interface TopbarProps {
@@ -21,11 +20,16 @@ module
     children?: unknown
   }
 
+component Divebar
+  props {}:{}
+  setup
+    const [open, setOpen] = useState(false)
+  button(className='h-[13px] w-[15px] rounded-[3.5px] bg-muted-foreground flex items-center p-0.5 relative' onClick={() => setOpen(!open)})
+    div(className={cn('h-[10px] w-[5px] rounded-[2px] bg-background absolute transition-all duration-280 ease-out', {'translate-x-[6px]': open})})
 component Brand
   props {brandName='Web app', imageUrl, imageAlt = "Web App", className, children }: BrandProps
   setup
     const BRAND_CLASS = "flex items-center gap-3"
-    const BRAND_IMAGE_CLASS = "size-16"
 
 
   div(className={cn(BRAND_CLASS, className)})
@@ -37,17 +41,18 @@ component Brand
 props { toggleSidebar, toggleExtra, isCompact = false, children }: TopbarProps
 header(className="sticky top-0 z-40 backdrop-blur-3xl w-full border-b-[0.5px] border-sidebar-border")
   div(className="topbar w-full px-5 flex items-center justify-between gap-4")
-    Brand(brandName='$')
-      div(className="hidden md:flex items-center")
-        button(
-          ~ className="size-6 aspect-square place-items-center text-input hover:text-foreground/75"
-          ~ onClick={toggleSidebar}
-          ~ aria-label={isCompact ? "Expand sidebar" : "Compact sidebar"}
-          ~ aria-pressed={isCompact}
-          ~ title={isCompact ? "Expand sidebar" : "Compact sidebar"}
-          ~ )
-          Icon(name='sidebar' className="size-5")
+    div(className="hidden md:flex items-center justify-center size-7")
+      button(className={cn('h-[16px] w-[19px] rounded-[4px] bg-muted-foreground flex items-center px-0.75 py-0.75 relative transition-all duration-180 active:scale-97 active:bg-foreground group active:skew-2', {'active:-skew-3': isCompact})} onClick={toggleSidebar})
+        div(className={cn('h-[10px] w-[6.5px] rounded-[2.5px] bg-background absolute transition-all duration-240 ease-out group-active:scale-102', {'translate-x-[6.5px] group-active:scale-85': !isCompact})})
+      // button(
+      //   ~ className="cursor-pointer size-6 aspect-square flex items-center justify-center text-muted-foreground hover:text-foreground/85"
+      //   ~ onClick={toggleSidebar}
+      //   ~ aria-label={isCompact ? "Expand sidebar" : "Compact sidebar"}
+      //   ~ aria-pressed={isCompact}
+      //   ~ title={isCompact ? "Expand sidebar" : "Compact sidebar"}
+      //   ~ )
+      //   Icon(name='sidebar' className="size-4.5")
+      // Divebar
     div(className="flex items-center gap-2")
       Button(onClick={toggleExtra} className='size-6') T
-      ThemeToggle
       | #{children}

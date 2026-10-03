@@ -4,6 +4,16 @@ All notable changes to `launcher` will be recorded here.
 
 ## [Unreleased]
 
+- Make the Effect Gym entrance a training module cover, with Start training opening a dedicated lessons route.
+
+- Add Raw and Presentation output tabs to Effect labs with result cards and execution timelines.
+
+- Add Shiki TypeScript syntax highlighting to the Effect training examples.
+
+- Build the Effect training route under Gym with eight runnable labs, checkpoints, execution traces, and locally saved progress.
+
+- Guard imports and Vite file serving against the vendored repos subtree, and document verified Effect 4 Schema patterns.
+
 - Show generator diffs only when `--diff` is passed, including dry runs and removals.
 
 - Add card item codegen for existing nav routes, with child page scaffolding, existing route destinations, and placeholder card grids.

@@ -22,7 +22,8 @@
       {
         "name": "@tsrx/typescript-plugin"
       }
-    ]
+    ],
+    "allowImportingTsExtensions": true
   },
   "include": [
     "src",
@@ -30,5 +31,10 @@
   ],
   "tsrx": {
     "compiler": "octane"
-  }
+  },
+  "exclude": [
+    "repos",
+    "node_modules",
+    "dist"
+  ]
 }

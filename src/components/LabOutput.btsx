@@ -1,0 +1,59 @@
+import { useState } from 'octane'
+import { presentLabResult } from '@/lib/present-lab-result'
+import type { LabResult } from '@/lib/effect-training'
+
+props { output, error, running }: { output: LabResult | null; error: string | null; running: boolean }
+setup
+  const [tab, setTab] = useState<'presentation' | 'raw'>('presentation')
+  const presented = output ? presentLabResult(output.value) : null
+  const onTabKey = (event: KeyboardEvent) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+    event.preventDefault()
+    const next = event.key === 'Home' ? 'presentation' : event.key === 'End' ? 'raw' : tab === 'raw' ? 'presentation' : 'raw'
+    setTab(next)
+    const buttons = (event.currentTarget as HTMLElement).parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]')
+    buttons?.[next === 'presentation' ? 0 : 1]?.focus()
+  }
+
+div(className="camp-result")
+  div(className="camp-output-tabs" role="tablist" aria-label="Output format")
+    button#output-presentation-tab(type="button" role="tab" aria-selected={tab === 'presentation'} aria-controls="output-presentation-panel" tabIndex={tab === 'presentation' ? 0 : -1} onClick={() => setTab('presentation')} onKeyDown={onTabKey}) Presentation
+    button#output-raw-tab(type="button" role="tab" aria-selected={tab === 'raw'} aria-controls="output-raw-panel" tabIndex={tab === 'raw' ? 0 : -1} onClick={() => setTab('raw')} onKeyDown={onTabKey}) Raw
+  div#output-presentation-panel(role="tabpanel" aria-labelledby="output-presentation-tab" tabIndex={0} hidden={tab !== 'presentation'} className="camp-output-panel")
+    if error
+      div(className="camp-result-warning")
+        strong Check the lab input
+        p(className="camp-error" role="alert") #{error}
+    if presented && output
+      div
+        p(className={"camp-result-heading " + (presented.validation ? 'has-validation' : '')}) #{presented.title}
+        if presented.validation
+          p(className="camp-error") #{presented.validation}
+        if presented.message
+          p(className="camp-result-message") #{presented.message}
+        div(className="camp-result-sections")
+          each section, index in presented.sections key index
+            section(className="camp-result-card" aria-label={section.title})
+              h4 #{section.title}
+              dl
+                each field, fieldIndex in section.fields key fieldIndex
+                  div(className="camp-result-field")
+                    dt #{field.label}
+                    dd
+                      span #{field.value}
+                      small(className="camp-value-type") #{field.type}
+        if output.trace.length
+          div
+            p(className="camp-trace-label") EXECUTION TRACE
+            ol(className="camp-trace camp-trace-visual")
+              each line, index in output.trace key index
+                li
+                  span(className="camp-trace-number" aria-hidden="true") #{index + 1}
+                  span #{line}
+    if !error && !output
+      p(className="camp-empty") #{running ? 'The runtime is executing your program.' : 'Make a prediction. Run a rep. See what happens.'}
+  div#output-raw-panel(role="tabpanel" aria-labelledby="output-raw-tab" tabIndex={0} hidden={tab !== 'raw'} className="camp-output-panel")
+    if error || output
+      pre(aria-label="Raw output") #{JSON.stringify(error ? { error } : output, null, 2)}
+    if !error && !output
+      p(className="camp-empty") #{running ? 'Waiting for the result…' : 'Run the program to inspect its raw result and trace.'}

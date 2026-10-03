@@ -20,9 +20,10 @@ const iconSetRoute = createRoute({ getParentRoute: () => rootRoute, path: '/icon
 const iconDetailRoute = createRoute({ getParentRoute: () => rootRoute, path: '/icons/$iconSetId/$iconName', component: lazyRouteComponent(() => import('./pages/IconDetail.btsx')) })
 const gymRoute = createRoute({ getParentRoute: () => rootRoute, path: '/gym', component: lazyRouteComponent(() => import('./pages/Gym.btsx')) })
 const effectJsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/gym/effect-js', component: lazyRouteComponent(() => import('./pages/EffectJs.btsx')) })
+const effectJsLessonsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/gym/effect-js/lessons', component: lazyRouteComponent(() => import('./pages/EffectJsLessons.btsx')) })
 export const router = createRouter({
   defaultPreload: 'intent',
-  routeTree: rootRoute.addChildren([homeRoute, convertersRoute, imageConverterRoute, iconsRoute, iconFavoritesRoute, iconSetRoute, iconDetailRoute, gymRoute, effectJsRoute]),
+  routeTree: rootRoute.addChildren([homeRoute, convertersRoute, imageConverterRoute, iconsRoute, iconFavoritesRoute, iconSetRoute, iconDetailRoute, gymRoute, effectJsRoute, effectJsLessonsRoute]),
 })
 
 declare module '@octanejs/tanstack-router' {

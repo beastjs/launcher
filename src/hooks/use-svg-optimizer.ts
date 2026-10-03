@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'octane'
 import type { SvgOptimizationOptions, SvgOptimizationRequest, SvgOptimizationResponse, SvgOptimizationResult } from '../lib/svg-optimizer'
 
-export function useSvgOptimizer(svg: string, { precision, multipass, removeDimensions, pretty }: SvgOptimizationOptions) {
+export function useSvgOptimizer(svg: string, { precision, multipass, removeDimensions, pretty, currentColor, viewBoxSize }: SvgOptimizationOptions) {
   const [result, setResult] = useState<SvgOptimizationResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [working, setWorking] = useState(false)
@@ -31,7 +31,7 @@ export function useSvgOptimizer(svg: string, { precision, multipass, removeDimen
         }
         worker.onerror = event => failed(event.message || 'SVG optimizer could not start. Please retry.')
         worker.onmessageerror = () => failed('Could not read the optimized SVG. Please retry.')
-        worker.postMessage({ id, svg, options: { precision, multipass, removeDimensions, pretty } } satisfies SvgOptimizationRequest)
+        worker.postMessage({ id, svg, options: { precision, multipass, removeDimensions, pretty, currentColor, viewBoxSize } } satisfies SvgOptimizationRequest)
       } catch (failure) {
         workerRef.current?.terminate()
         workerRef.current = null
@@ -39,7 +39,7 @@ export function useSvgOptimizer(svg: string, { precision, multipass, removeDimen
       }
     }, 150)
     return () => { cancelled = true; clearTimeout(timer) }
-  }, [svg, precision, multipass, removeDimensions, pretty, revision])
+  }, [svg, precision, multipass, removeDimensions, pretty, currentColor, viewBoxSize, revision])
   useEffect(() => () => { workerRef.current?.terminate(); workerRef.current = null }, [])
   return { result, error, working, retry: () => setRevision(value => value + 1) }
 }

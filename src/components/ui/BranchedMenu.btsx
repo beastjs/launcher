@@ -165,7 +165,7 @@ else
     each item, i in items key item.title
       div(className="group/section flex flex-col" data-open={item.items && open.has(i) ? "" : undefined})
         button(
-          ~ className=" flex cursor-pointer border-0 bg-transparent gap-2 -ms-2.25 ps-2 py-1.5 text-left font-medium tracking-tight outline-none focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-[var(--bm-focus)] [color:var(--bm-muted)] [font-family:inherit] [font-size:calc(var(--bm-font)+1px)] [-webkit-tap-highlight-color:transparent] [transition:color_200ms_ease] group-data-[open]/section:[color:var(--bm-ink)] data-[active]:[color:var(--bm-ink)] hover:[color:var(--bm-ink)] select-none"
+          ~ className=" flex items-center cursor-pointer border-0 text-muted-foreground bg-transparent gap-2 -ms-2.25 ps-2 py-1.5 text-left font-medium tracking-tight outline-none focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-[var(--bm-focus)] [color:var(--bm-muted)] [font-family:inherit] [font-size:calc(var(--bm-font)+1px)] [-webkit-tap-highlight-color:transparent] [transition:color_200ms_ease] group-data-[open]/section:[color:var(--bm-ink)] data-[active]:[color:var(--bm-ink)] hover:[color:var(--bm-ink)] select-none"
           ~ ref={el => {
           ~   heads.current[i] = el;
           ~   }}
@@ -176,7 +176,7 @@ else
           ~ onClick={() => (item.items ? toggle(i) : select(item.title ?? item.label, item))}
           ~ )
           span #{item.title}
-          Icon(name='chevron-down' size={12} className={cn('-rotate-90 opacity-50', {'rotate-0': item.items && open.has(i)})})
+          // Icon(name='chevron-down' className={cn('size-3 inline -rotate-90 opacity-50', {'rotate-0': item.items && open.has(i)})})
 
         if item.items
           div(className="grid [grid-template-rows:0fr] [transition:grid-template-rows_var(--bm-fold)_cubic-bezier(0.23,1,0.32,1)] group-data-[open]/section:[grid-template-rows:1fr] motion-reduce:transition-none" aria-hidden={!open.has(i)})
@@ -209,7 +209,7 @@ else
                       ~ )
                 each kid in item.items key kid.value
                   Link(
-                    ~ className="m-0 box-border flex w-full cursor-pointer items-center gap-1 border-0 bg-transparent py-0 pr-0 text-left tracking-tight outline-none focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-[var(--bm-focus)] [height:var(--bm-row)] [padding-left:var(--bm-indent)] [color:var(--bm-muted)] [font-family:inherit] [-webkit-tap-highlight-color:transparent] [transition:color_200ms_ease] hover:[color:var(--bm-ink)] disabled:hover:[color:var(--bm-muted)] disabled:opacity-50 font-medium data-[active]:[color:var(--bm-accent)]"
+                    ~ className="m-0 box-border flex w-full cursor-pointer items-center gap-1 border-0 bg-transparent py-0 pr-0 text-left tracking-tight outline-none focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-[var(--bm-focus)] [height:var(--bm-row)] [padding-left:var(--bm-indent)] [color:var(--muted-foreground)] [font-family:inherit] [-webkit-tap-highlight-color:transparent] [transition:color_200ms_ease] hover:[color:var(--bm-ink)] disabled:hover:[color:var(--bm-muted)] disabled:opacity-50 font-medium data-[active]:[color:var(--bm-accent)]"
                     ~ to={kid.href}
                     ~ aria-current={isActive(kid) ? "page" : undefined}
                     ~ data-active={isActive(kid) ? "" : undefined}
@@ -218,9 +218,5 @@ else
                     ~ disabled={kid.disabled}
                     ~ )
                     if kid.icon
-                      span(className="inline-flex flex-none" aria-hidden="true")
-                        if typeof kid.icon === "string"
-                          Icon(name={kid.icon} size={18} className='-ml-0.5 -mt-px')
-                        else
-                          | #{kid.icon}
+                      Icon(name={kid.icon} size={18} className='-ml-0.5 -mt-px')
                     span.whitespace-nowrap #{kid.label}

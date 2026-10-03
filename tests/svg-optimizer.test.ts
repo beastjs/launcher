@@ -40,3 +40,25 @@ test('supports readable output and rejects malformed sources and invalid precisi
   expect(() => optimizeSvg('<svg><path></svg>')).toThrow()
   for (const precision of [-1, 7, 1.5, NaN]) expect(() => optimizeSvg(svg, { ...defaultSvgOptions, precision })).toThrow('Precision')
 })
+
+test('currentColor converts paint while preserving none and gradient references', () => {
+  const source = '<svg viewBox="0 0 24 24" fill="none" stroke="red"><defs><linearGradient id="paint"><stop stop-color="blue"/></linearGradient></defs><path fill="url(#paint)" d="M0 0h10v10H0z"/></svg>'
+  const themed = optimizeSvg(source, { ...defaultSvgOptions, currentColor: true }).svg
+  expect(themed).toContain('fill="none"')
+  expect(themed).toContain('stroke="currentColor"')
+  expect(themed).toContain('url(#paint)')
+  expect(optimizeSvg(source, { ...defaultSvgOptions, currentColor: false }).svg).toContain('stroke="red"')
+  expect(optimizeSvg('<svg viewBox="0 0 24 24"><path d="M0 0h10v10H0z"/></svg>', { ...defaultSvgOptions, currentColor: true }).svg).toContain('fill="currentColor"')
+})
+
+test('normalizes offset rectangular art to a chosen square without clipping', () => {
+  const source = '<svg viewBox="10 20 12 6"><path d="M10 20h12v6H10z"/></svg>'
+  const result = optimizeSvg(source, { ...defaultSvgOptions, viewBoxSize: 24 }).svg
+  expect(result).toContain('viewBox="0 0 24 24"')
+  expect(result).toContain('M0 6h24v12H0z')
+  expect(optimizeSvg(source, { ...defaultSvgOptions, viewBoxSize: 48 }).svg).toContain('viewBox="0 0 48 48"')
+  const withoutBounds = '<svg width="12" height="12"><path d="M0 0h12v12H0z"/></svg>'
+  expect(optimizeSvg(withoutBounds, { ...defaultSvgOptions, viewBoxSize: 24 }).svg).toContain('viewBox="0 0 24 24"')
+  for (const viewBoxSize of [0, -1, NaN, Infinity]) expect(() => optimizeSvg(source, { ...defaultSvgOptions, viewBoxSize })).toThrow('positive')
+  expect(() => optimizeSvg('<svg><path d="M0 0h12v12H0z"/></svg>', { ...defaultSvgOptions, viewBoxSize: 24 })).toThrow('valid viewBox')
+})

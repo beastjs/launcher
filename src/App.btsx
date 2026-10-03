@@ -1,5 +1,4 @@
 import { Suspense, lazy } from "octane";
-import ThemeProvider from "@/components/ThemeProvider.btsx";
 import { useMobile } from "@/hooks/use-mobile";
 import Shell from "@/components/Shell.btsx";
 
@@ -10,10 +9,10 @@ module
 props {}:{}
 setup
   const isMobile = useMobile()
-ThemeProvider
+
+Shell
   Suspense(fallback={null})
     if isMobile
       MobileLayout
     else
-      Shell
-        DesktopLayout
+      DesktopLayout

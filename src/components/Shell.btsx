@@ -1,5 +1,7 @@
 import { type ReactNode } from "octane";
+import ThemeProvider from "./ThemeProvider.btsx";
 
 props {children}: {children: ReactNode}
-div#shell(className='min-h-screen w-full')
-  | #{children}
+ThemeProvider
+  div#shell(className='min-h-screen w-full')
+    | #{children}

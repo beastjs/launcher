@@ -1,4 +1,5 @@
-import { createContext, use, useEffect, useState } from 'octane'
+import { useEffect, useState } from 'octane'
+import { ThemeContext, useTheme, type ThemeContextValue } from '@/lib/theme-context'
 import type { ReactNode } from 'octane'
 import { applyTheme, getPreferredTheme, saveTheme } from '@/lib/theme'
 import type { Theme } from '@/lib/theme'
@@ -13,34 +14,22 @@ component ThemeToggle
 
   button(
     ~ type='button'
-    ~ className='inline-flex size-7 cursor-pointer items-center justify-center rounded-full hover:bg-muted text-foreground/70 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30 dark:hover:bg-white/15 transition-all duration-200 ease-out active:scale-97 active:rotate-6'
+    ~ className='inline-flex size-7 cursor-pointer items-center justify-center rounded-full hover:bg-muted hover:text-foreground/85 text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30 dark:hover:bg-white/15 transition-all duration-200 ease-out active:scale-97 active:rotate-6'
     ~ onClick={toggleTheme}
     ~ aria-label='Dark theme'
     ~ aria-pressed={theme === 'dark'}
     ~ title={title}
     ~ )
-    Icon(name='theme' className='size-5.5 md:size-5')
+    Icon(name='theme' className='size-5.5 md:size-4.5')
 
 module
-  interface ThemeContextValue {
-    theme: Theme
-    setTheme: (theme: Theme) => void
-    toggleTheme: () => void
-  }
-
   interface ThemeProviderProps {
     children?: ReactNode
   }
 
   export { ThemeToggle }
+  export { useTheme } from '@/lib/theme-context'
 
-  const ThemeContext = createContext<ThemeContextValue | null>(null)
-
-  export function useTheme(): ThemeContextValue {
-    const context = use(ThemeContext)
-    if (context === null) throw new Error('useTheme must be used within ThemeProvider.')
-    return context
-  }
 props { children }: ThemeProviderProps
 
 setup
