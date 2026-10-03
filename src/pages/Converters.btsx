@@ -6,12 +6,12 @@ module
   const converters = [{ id: 'image', title: 'Image Converter', description: 'A fresh format. A smaller file. Convert images to WebP, JPEG, or AVIF.', href: '/converters/image' }]
 
 component ConverterCard
-  props { title, description, href }: { title: string; description: string; href: string }
+  props { id, title, description, href }: { id: string; title: string; description: string; href: string }
   Link(to={href} className="group flex h-full flex-col rounded-2xl border border-border/30 bg-card p-6 transition-colors hover:border-accent/60 hover:bg-secondary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring")
     div(className="mb-8 flex items-center justify-between")
       div(className="grid size-12 place-items-center rounded-xl border border-border/20 bg-background text-foreground")
         Icon(name="mechanics" size={24})
-      span(className="rounded-full bg-background px-2.5 py-1 font-mono text-[10px] tracking-wider text-muted-foreground") IMAGE
+      span(className="rounded-full bg-background px-2.5 py-1 font-mono text-[10px] tracking-wider text-muted-foreground uppercase") #{id}
     h2(className="text-lg font-semibold tracking-tight") #{title}
     p(className="mt-2 max-w-xs text-sm leading-6 text-muted-foreground") #{description}
     div(className="mt-8 flex items-center justify-between text-sm font-medium")

@@ -268,6 +268,100 @@ export function renderPage(href: string): string {
   return `import PageHolder from "@/components/PageHolder.btsx"\n\nprops {}:{}\nPageHolder(href=${JSON.stringify(href)})\n`
 }
 
+export type CardSpec = {
+  parent: string
+  card: { id: string; title: string; description: string; href: string }
+  page: GenSpec['page']
+}
+
+/** Only edit inline object lists explicitly consumed by HyperList. */
+export function cardList(src: string): { name: string; open: number } | null {
+  const data = /HyperList\([^\n]*\bdata=\{(\w+)\}/.exec(src)?.[1]
+  if (!data) return null
+  const declaration = new RegExp(`\\bconst ${escapeRe(data)}\\s*=\\s*\\[`).exec(src)
+  return declaration ? { name: data, open: declaration.index + declaration[0].length - 1 } : null
+}
+
+export function supportsCards(src: string): boolean {
+  return cardList(src) !== null || /^import PageHolder from ['"]@\/components\/PageHolder\.btsx['"]\s+props \{\s*\}:\s*\{\s*\}\s+PageHolder\(href="[^"\n]+"\)\s*$/.test(src.trim())
+}
+
+export function renderCard(card: CardSpec['card']): string {
+  return `{ id: ${q(card.id)}, title: ${q(card.title)}, description: ${q(card.description)}, href: ${q(card.href)} }`
+}
+
+export function updateCards(src: string, card: CardSpec['card']): string {
+  const list = cardList(src)
+  if (!list) throw new Error('Page does not contain a supported inline HyperList card list')
+  for (const { start, end } of arrayObjects(src, list.open)) {
+    const body = src.slice(start, end + 1)
+    for (const field of ['id', 'href'] as const) {
+      if (new RegExp(`\\b${field}:\\s*(?:${escapeRe(q(card[field]))}|${escapeRe(JSON.stringify(card[field]))})`).test(body))
+        throw new Error(`Card ${field} "${card[field]}" already exists`)
+    }
+  }
+  return appendToArray(src, list.open, renderCard(card), '    ')
+}
+
+export function planCard(spec: CardSpec): FileChange[] {
+  const routerBefore = read(paths.router)
+  if (routerBefore === null) throw new Error(`Missing file: ${paths.router}`)
+  const routes = listRoutes(routerBefore)
+  const parent = routes.find((route) => route.path === spec.parent)
+  if (!parent?.component) throw new Error('Select an existing page route')
+  const parentPath = paths.page(parent.component)
+  const before = read(parentPath)
+  if (before === null || !supportsCards(before)) throw new Error('Selected page does not support cards')
+  if (!spec.card.id || !spec.card.title || !/^\/[a-zA-Z0-9\-_/]*$/.test(spec.card.href)) throw new Error('Card id, title and internal route are required')
+  const changes: FileChange[] = [{
+    path: parentPath, before,
+    after: updateCards(cardList(before) ? before : renderCardPage(parent.component), spec.card)
+  }]
+  if (spec.page) {
+    if (routes.some((route) => route.path === spec.card.href)) throw new Error('Destination route already exists')
+    const { component, createFile } = spec.page
+    if (!/^[A-Z][A-Za-z0-9]*$/.test(component)) throw new Error('Use a PascalCase component name')
+    if (component === parent.component) throw new Error('Child page must differ from its parent')
+    const file = paths.page(component)
+    if (createFile) {
+      if (existsSync(file)) throw new Error(`Page already exists: ${file}`)
+      changes.push({ path: file, before: null, after: renderPage(spec.card.href) })
+    } else if (!existsSync(file)) throw new Error(`Missing file: ${file}`)
+    const indexBefore = read(paths.pagesIndex)
+    if (indexBefore === null) throw new Error(`Missing file: ${paths.pagesIndex}`)
+    changes.push({ path: paths.pagesIndex, before: indexBefore, after: updatePagesIndex(indexBefore, component) })
+    changes.push({ path: paths.router, before: routerBefore, after: updateRouter(routerBefore, component, spec.card.href) })
+  } else if (!routes.some((route) => route.path === spec.card.href && !route.path.includes('$'))) {
+    throw new Error('Select an existing destination route or create a page')
+  }
+  return changes
+}
+
+export function renderCardPage(title: string): string {
+  return `import { Link } from '@octanejs/tanstack-router'
+import HyperList from '@/components/ui/HyperList.btsx'
+import { Icon } from '@/lib/icons'
+
+module
+  const cards = []
+
+component Card
+  props { title, description, href }: { title: string; description: string; href: string }
+  Link(to={href} className="group flex h-full flex-col rounded-2xl border border-border/30 bg-card p-6 transition-colors hover:border-accent/60 hover:bg-secondary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring")
+    h2(className="text-lg font-semibold tracking-tight") #{title}
+    p(className="mt-2 text-sm leading-6 text-muted-foreground") #{description}
+    div(className="mt-8 flex items-center justify-between text-sm font-medium")
+      span Open
+      Icon(name="arrow-right" size={18} className="transition-transform group-hover:translate-x-1")
+
+props {}:{}
+section(className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-12")
+  header(className="mb-8")
+    h1(className="text-3xl font-semibold tracking-tight") #{${JSON.stringify(title)}}
+  HyperList(keyId="id" data={cards} component={Card} direction="up" container="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" itemStyle="min-w-0")
+`
+}
+
 // ── plan / apply ────────────────────────────────────────────────────────────
 
 const read = (path: string) => (existsSync(path) ? readFileSync(path, 'utf8') : null)

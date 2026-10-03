@@ -143,3 +143,42 @@ export { Home, DeckBuilder }
 export { Home }
 `)
 })
+
+const { planCard, updateCards, supportsCards, renderCardPage } = await import('./codegen')
+const { compileBeast } = await import('beast-tsrx')
+const card = { id: 'audio', title: "Audio's formats", description: 'Convert\nformats', href: '/converters/audio' }
+
+test('appends and compiles converter cards while preserving the existing card', () => {
+  const source = readFileSync(new URL('../../src/pages/Converters.btsx', import.meta.url), 'utf8')
+  const updated = updateCards(source, card)
+  const array = /const converters = (\[[\s\S]*?\])/.exec(updated)![1]
+  const items = new Function(`return (${array})`)()
+  expect(items).toHaveLength(2)
+  expect(items[0].href).toBe('/converters/image')
+  expect(items[1]).toEqual(card)
+  expect(() => compileBeast(updated, { filename: 'Converters.btsx' })).not.toThrow()
+  expect(() => updateCards(updated, { ...card, href: '/other' })).toThrow('already exists')
+  expect(() => updateCards(updated, { ...card, id: 'other' })).toThrow('already exists')
+  expect(() => updateCards('module\n  const cards = [{ id: "audio", href: "/other" }]\nHyperList(data={cards})', card)).toThrow('already exists')
+})
+
+test('plans cards with a new child page or an existing route without touching sidebar navigation', () => {
+  const changes = planCard({ parent: '/converters', card, page: { component: 'AudioConverter', createFile: true } })
+  expect(changes).toHaveLength(4)
+  expect(changes.some((change) => change.path.endsWith('/navs.ts'))).toBe(false)
+  const router = changes.find((change) => change.path.endsWith('/router.ts'))!
+  expect(listRoutes(router.after!).at(-1)?.path).toBe(card.href)
+  const existing = planCard({ parent: '/converters', card: { ...card, href: '/icons' }, page: null })
+  expect(existing).toHaveLength(1)
+  expect(() => planCard({ parent: '/converters', card, page: null })).toThrow('existing destination')
+  expect(() => planCard({ parent: '/icons', card, page: null })).toThrow('does not support cards')
+})
+
+test('generated placeholders become compilable card grids and custom pages are preserved', () => {
+  expect(supportsCards('import PageHolder from "@/components/PageHolder.btsx"\n\nprops {}:{}\nPageHolder(href="/gym")\n')).toBe(true)
+  expect(supportsCards('import PageHolder from "@/components/PageHolder.btsx"\nmodule\n  const custom = 1\nprops {}:{}\nPageHolder(href="/gym")')).toBe(false)
+  const page = updateCards(renderCardPage('Gym'), card)
+  expect(() => compileBeast(page, { filename: 'Gym.btsx' })).not.toThrow()
+  expect(page).toContain('data={cards}')
+  expect(page).toContain('Audio')
+})

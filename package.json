@@ -19,6 +19,7 @@
     "@octanejs/tanstack-router": "^0.1.60",
     "beast-tsrx": "0.7.1",
     "clsx": "^2.1.1",
+    "effect": "^4.0.0",
     "octane": "0.7.1",
     "svgo": "^4.1.0",
     "tailwind-merge": "^3.6.0"

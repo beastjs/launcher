@@ -1,0 +1,4 @@
+import PageHolder from "@/components/PageHolder.btsx"
+
+props {}:{}
+PageHolder(href="/gym/effect-js")

@@ -13,7 +13,7 @@ import { tmpdir } from 'node:os'
 import { join, relative } from 'node:path'
 import { icons } from '../../src/lib/icons/icons'
 import { navGroups } from '../../src/lib/navs'
-import { apply, isExternal, listRoutes, paths, plan, planRemovePage, root, toKebab, toPascal, type FileChange, type GenSpec } from './codegen'
+import { apply, isExternal, listRoutes, paths, plan, planCard, supportsCards, planRemovePage, root, toKebab, toPascal, type FileChange, type GenSpec } from './codegen'
 import { CancelError, colors as c, confirm, select, text } from './prompts'
 
 const dryRun = process.argv.includes('--dry-run')
@@ -68,9 +68,15 @@ async function main() {
     message: 'What are you adding?',
     choices: [
       { label: 'Page', value: 'page' as const, hint: '⤍  within the app' },
-      { label: 'Link', value: 'link' as const, hint: '⤍  to another site' }
+      { label: 'Link', value: 'link' as const, hint: '⤍  to another site' },
+      { label: 'Card item', value: 'card' as const, hint: '⤍  within an existing nav route' }
     ]
   })
+
+  if (kind === 'card') {
+    await addCard()
+    return
+  }
 
   const label = await text({
     message: 'Label',
@@ -176,6 +182,56 @@ async function main() {
   apply(changes)
   printChanges(changes)
   console.log(`\n${c.green('Done.')}${page ? ` Visit ${c.bold(href)} in the dev server.` : ''}\n`)
+}
+
+async function addCard() {
+  const routes = listRoutes(routerSrc)
+  const parents = routes.filter((route) => route.component && allItems.some((item) => item.href === route.path)
+    && existsSync(paths.page(route.component)) && supportsCards(readFileSync(paths.page(route.component), 'utf8')))
+  if (!parents.length) throw new Error('No nav pages with card lists or generated placeholders found')
+  const parent = await select({ message: 'Add cards to which nav route?', choices: parents.map((route) => ({ label: route.path, value: route.path })) })
+  const title = await text({ message: 'Card title', validate: (v) => v ? undefined : 'Title is required' })
+  const id = await text({ message: 'Card id', initial: toKebab(title), validate: (v) => v ? undefined : 'Id is required' })
+  const description = await text({ message: 'Card description' })
+  const createPage = await confirm({ message: 'Create a new page for this card?', initial: true })
+  let page: GenSpec['page'] = null
+  let href: string
+  if (createPage) {
+    href = await text({
+      message: 'Child route path', initial: `${parent.replace(/\/$/, '')}/${toKebab(title)}`,
+      validate: (v) => !/^\/[a-zA-Z0-9\-_/]*$/.test(v) ? 'Enter a concrete route starting with /'
+        : routePaths.includes(v) ? 'Route already exists' : undefined
+    })
+    const component = await text({
+      message: 'Component name', initial: toPascal(title),
+      validate: (v) => !/^[A-Z][A-Za-z0-9]*$/.test(v) ? 'Use PascalCase'
+        : pageExports.includes(v) ? 'Component is already exported' : undefined
+    })
+    let createFile = true
+    if (existsSync(paths.page(component))) {
+      createFile = !(await confirm({ message: `src/pages/${component}.btsx exists. Reuse it?`, initial: true }))
+      if (createFile) throw new Error(`Refusing to overwrite src/pages/${component}.btsx`)
+    }
+    page = { component, createFile }
+  } else {
+    const destinations = routes.filter((route) => !route.path.includes('$') && route.path !== parent)
+    if (!destinations.length) throw new Error('No existing destination routes available')
+    href = await select({ message: 'Destination route', choices: destinations.map((route) => ({ label: route.path, value: route.path })), filterable: true })
+  }
+  const changes = planCard({ parent, card: { id, title, description, href }, page })
+  console.log()
+  printDiff(changes)
+  if (dryRun) {
+    console.log(c.yellow('Dry run — no files written.\n'))
+    return
+  }
+  if (!(await confirm({ message: `Write ${changes.length} file(s)?` }))) {
+    console.log(c.dim('Nothing written.\n'))
+    return
+  }
+  apply(changes)
+  printChanges(changes)
+  console.log(`\n${c.green('Done.')} Visit ${c.bold(parent)} in the dev server.\n`)
 }
 
 function printChanges(changes: FileChange[]) {

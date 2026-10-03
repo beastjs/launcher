@@ -5,4 +5,6 @@ import Icons from './Icons.btsx'
 import IconSet from './IconSet.btsx'
 import IconFavorites from './IconFavorites.btsx'
 import IconDetail from './IconDetail.btsx'
-export { Home, Converters, ImageConverter, Icons, IconSet, IconFavorites, IconDetail }
+import Gym from './Gym.btsx'
+import EffectJs from './EffectJs.btsx'
+export { Home, Converters, ImageConverter, Icons, IconSet, IconFavorites, IconDetail, Gym, EffectJs }

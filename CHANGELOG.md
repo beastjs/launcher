@@ -4,6 +4,8 @@ All notable changes to `launcher` will be recorded here.
 
 ## [Unreleased]
 
+- Add card item codegen for existing nav routes, with child page scaffolding, existing route destinations, and placeholder card grids.
+
 - Use the sidebar selection foreground color for selected labels and icons in light and dark mode.
 
 - Add per-icon routes with worker-based SVGO optimization, before/after previews, options, and SVG/Beast symbol exports.

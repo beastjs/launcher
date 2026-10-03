@@ -46,6 +46,15 @@ export const navGroups: NavGroup[] = [
         description: 'My Icons',
         value: 'icons',
         tags: ['icons']
+      },
+      {
+        href: '/gym',
+        icon: 'arrow-left',
+        label: 'Gym',
+        short: 'Gym',
+        description: 'My Gym',
+        value: 'gym',
+        tags: ['gym']
       }
     ]
   },
