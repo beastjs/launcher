@@ -4,6 +4,8 @@ All notable changes to `launcher` will be recorded here.
 
 ## [Unreleased]
 
+- Show generator diffs only when `--diff` is passed, including dry runs and removals.
+
 - Add card item codegen for existing nav routes, with child page scaffolding, existing route destinations, and placeholder card grids.
 
 - Use the sidebar selection foreground color for selected labels and icons in light and dark mode.

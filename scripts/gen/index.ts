@@ -4,7 +4,8 @@
  * scaffolds src/pages/<Name>.btsx, exports it, and registers the route in src/router.ts.
  *
  *   bun run gen            # interactive
- *   bun run gen --dry-run  # show the diff without writing
+ *   bun run gen --diff     # show diffs before confirming
+ *   bun run gen --dry-run  # plan changes without writing (add --diff to preview)
  *   bun run gen --routes   # list page routes
  *   bun run gen --rm       # select and remove a page route (--remove also works)
  */
@@ -17,6 +18,7 @@ import { apply, isExternal, listRoutes, paths, plan, planCard, supportsCards, pl
 import { CancelError, colors as c, confirm, select, text } from './prompts'
 
 const dryRun = process.argv.includes('--dry-run')
+const showDiff = process.argv.includes('--diff')
 const removeMode = process.argv.includes('--rm') || process.argv.includes('--remove')
 const routesMode = process.argv.includes('--routes')
 const NEW_GROUP = Symbol('new-group')
@@ -49,7 +51,7 @@ async function main() {
     })
     const changes = planRemovePage(path)
     console.log()
-    printDiff(changes)
+    if (showDiff) printDiff(changes)
     if (dryRun) {
       console.log(c.yellow('Dry run — no files written.\n'))
       return
@@ -169,7 +171,7 @@ async function main() {
   const changes = plan(spec)
 
   console.log()
-  printDiff(changes)
+  if (showDiff) printDiff(changes)
 
   if (dryRun) {
     console.log(c.yellow('Dry run — no files written.\n'))
@@ -220,7 +222,7 @@ async function addCard() {
   }
   const changes = planCard({ parent, card: { id, title, description, href }, page })
   console.log()
-  printDiff(changes)
+  if (showDiff) printDiff(changes)
   if (dryRun) {
     console.log(c.yellow('Dry run — no files written.\n'))
     return

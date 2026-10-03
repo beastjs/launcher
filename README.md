@@ -46,14 +46,16 @@ Record application changes in [CHANGELOG.md](CHANGELOG.md).
 
 ```bash
 bun run gen            # interactively add a page, external link, or card item
-bun run gen --dry-run  # preview changes without writing
+bun run gen --diff     # show diffs before confirming
+bun run gen --dry-run  # plan changes without writing
+bun run gen --dry-run --diff # preview diffs without writing
 bun run gen --routes   # list registered page routes
 bun run gen --rm       # select and remove a page (--remove also works)
 ```
 
 The generator updates `src/lib/navs.ts` and, for pages, creates a `.btsx`
 component, updates `src/pages/index.ts`, and registers a lazy route in
-`src/router.ts`. It previews the diff before confirming writes or removals.
+`src/router.ts`. Pass `--diff` to preview diffs before confirming writes or removals.
 Vite handles these imports and reloads the app through the existing Beast plugin;
 no additional Vite plugin is required. Start it with `bun run dev`.
 
@@ -62,7 +64,7 @@ Choose **Card item** to add a card to an existing navigation page such as
 updates the parent list without adding another sidebar item. Generated
 `PageHolder` placeholders can become card grids; custom pages are offered only
 when they already use an inline object list with `HyperList(data={...})`.
-Card ids and destinations must be unique within the list. Diff previews and
+Card ids and destinations must be unique within the list. `--diff` and
 `--dry-run` work for cards too.
 
 Run the generator checks with `bun test scripts/gen`.

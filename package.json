@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "typecheck": "tsrx-tsc --noEmit",
     "check": "bun run typecheck && bun run build",
-    "gen": "bun scripts/gen/index.ts"
+    "gen": "bun scripts/gen/index.ts",
+    "repos:update:effect": "bun scripts/repos/update.effect.sh"
   },
   "dependencies": {
     "@iconify/utils": "^3.1.7",
