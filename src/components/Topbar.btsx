@@ -38,21 +38,11 @@ component Brand
     div #{children}
 
 
-props { toggleSidebar, toggleExtra, isCompact = false, children }: TopbarProps
-header(className="sticky top-0 z-40 backdrop-blur-3xl w-full border-b-[0.5px] border-sidebar-border")
-  div(className="topbar w-full px-5 flex items-center justify-between gap-4")
-    div(className="hidden md:flex items-center justify-center size-7")
-      button(className={cn('h-[16px] w-[19px] rounded-[4px] bg-muted-foreground flex items-center px-0.75 py-0.75 relative transition-all duration-180 active:scale-97 active:bg-foreground group active:skew-2', {'active:-skew-3': isCompact})} onClick={toggleSidebar})
-        div(className={cn('h-[10px] w-[6.5px] rounded-[2.5px] bg-background absolute transition-all duration-240 ease-out group-active:scale-102', {'translate-x-[6.5px] group-active:scale-85': !isCompact})})
-      // button(
-      //   ~ className="cursor-pointer size-6 aspect-square flex items-center justify-center text-muted-foreground hover:text-foreground/85"
-      //   ~ onClick={toggleSidebar}
-      //   ~ aria-label={isCompact ? "Expand sidebar" : "Compact sidebar"}
-      //   ~ aria-pressed={isCompact}
-      //   ~ title={isCompact ? "Expand sidebar" : "Compact sidebar"}
-      //   ~ )
-      //   Icon(name='sidebar' className="size-4.5")
-      // Divebar
+props { toggleExtra, isCompact = false, children }: TopbarProps
+header(className="sticky top-0 z-40 backdrop-blur-3xl w-full _border-b-[0.5px] border-sidebar-border")
+  div(className="topbar w-full px-6 flex items-center justify-between gap-4")
+    h1(className='font-sans font-semibold text-2xl tracking-tight smooth-reveal')
+      span Launch Day
     div(className="flex items-center gap-2")
       Button(onClick={toggleExtra} className='size-6') T
       | #{children}

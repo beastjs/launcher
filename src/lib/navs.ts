@@ -23,7 +23,7 @@ export const navGroups: NavGroup[] = [
       {
         href: '/',
         value: 'launcher',
-        icon: 'new-folder',
+        icon: 'launch',
         label: 'Launcher',
         short: 'launcher',
         description: 'Launcher',
@@ -31,7 +31,7 @@ export const navGroups: NavGroup[] = [
       },
       {
         href: '/converters',
-        icon: 'search',
+        icon: 'image',
         label: 'Converters',
         short: 'Converters',
         description: 'Media Converters',
@@ -40,7 +40,7 @@ export const navGroups: NavGroup[] = [
       },
       {
         href: '/icons',
-        icon: 'search',
+        icon: 'icon',
         label: 'Icons',
         short: 'Icons',
         description: 'My Icons',
@@ -49,7 +49,7 @@ export const navGroups: NavGroup[] = [
       },
       {
         href: '/gym',
-        icon: 'search',
+        icon: 'gym',
         label: 'Gym',
         short: 'Gym',
         description: 'My Gym',
@@ -63,7 +63,7 @@ export const navGroups: NavGroup[] = [
     items: [
       {
         href: 'https://beast-docs-adv.beastjs.workers.dev',
-        icon: 'search',
+        icon: 'gym',
         label: 'Beast Docs',
         short: 'Beast Docs',
         description: 'Beast Developer Docs',

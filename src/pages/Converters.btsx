@@ -19,9 +19,8 @@ component ConverterCard
       Icon(name="arrow-right" size={18} className="transition-transform group-hover:translate-x-1")
 
 props {}:{}
-section(className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-12")
-  header(className="mb-8")
-    p(className="mb-3 font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground") Your toolkit
+section(className="mx-auto w-full max-w-7xl p-5 md:p-6")
+  header(className="mb-8 hidden")
+    p(className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground") Media
     h1(className="text-3xl font-semibold tracking-tight") Converters
-    p(className="mt-3 text-sm leading-6 text-muted-foreground") Simple tools to get your files into the right shape.
   HyperList(keyId="id" data={converters} component={ConverterCard} direction="up" container="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" itemStyle="min-w-0")
