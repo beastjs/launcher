@@ -1,0 +1,45 @@
+import { Link } from '@octanejs/tanstack-router'
+import { useCopy } from '@/hooks/use-copy'
+import { iconKey } from '@/lib/icon-favorites'
+import { getIconSymbolSnippet, getSvgElementSnippet, type IconEntry } from '@/lib/iconify'
+import IconShell from './IconShell.btsx'
+
+props { icons, size = 32, favoriteKeys, onToggleFavorite, showCollection = false }: { icons: IconEntry[]; size?: number; favoriteKeys: Set<string>; onToggleFavorite: (icon: IconEntry) => void; showCollection?: boolean }
+setup const { copy, copiedName, error } = useCopy()
+
+if error
+  p(className="mb-4 text-xs text-destructive" role="alert") #{error}
+div(className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6")
+  each icon in icons key iconKey(icon)
+    article(className="group relative flex min-w-0 flex-col rounded-xl border border-border/20 bg-card p-3 transition-colors hover:border-border/50")
+      button(
+        ~ type="button"
+        ~ onClick={() => onToggleFavorite(icon)}
+        ~ aria-label={`${favoriteKeys.has(iconKey(icon)) ? 'Remove' : 'Save'} ${icon.sourceSetId}:${icon.name} ${favoriteKeys.has(iconKey(icon)) ? 'from' : 'to'} favorites`}
+        ~ aria-pressed={favoriteKeys.has(iconKey(icon))}
+        ~ title={favoriteKeys.has(iconKey(icon)) ? 'Remove from favorites' : 'Save to favorites'}
+        ~ className={"absolute right-2 top-2 grid size-7 place-items-center rounded-md hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " + (favoriteKeys.has(iconKey(icon)) ? 'text-amber-500' : 'text-muted-foreground')}
+        ~ )
+        svg(
+          ~ viewBox="0 0 24 24"
+          ~ width="16"
+          ~ height="16"
+          ~ fill={favoriteKeys.has(iconKey(icon)) ? 'currentColor' : 'none'}
+          ~ stroke="currentColor"
+          ~ stroke-width="1.5"
+          ~ stroke-linejoin="round"
+          ~ aria-hidden="true"
+          ~ )
+          path(d="m12 3 2.78 5.63L21 9.54l-4.5 4.39 1.06 6.2L12 17.2l-5.56 2.93 1.06-6.2L3 9.54l6.22-.91Z")
+      Link(to="/icons/$iconSetId/$iconName" params={{iconSetId: icon.sourceSetId, iconName: icon.name}} aria-label={`Optimize ${icon.sourceSetId}:${icon.name}`} className="grid h-24 place-items-center rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring")
+        IconShell(icon={icon} size={size})
+      h2(className="truncate text-center font-mono text-[10px] text-muted-foreground" title={icon.name})
+        Link(to="/icons/$iconSetId/$iconName" params={{iconSetId: icon.sourceSetId, iconName: icon.name}} className="hover:text-foreground hover:underline") #{icon.name}
+      if showCollection
+        Link(to="/icons/$iconSetId" params={{iconSetId: icon.sourceSetId}} className="mt-1 truncate text-center font-mono text-[10px] text-muted-foreground hover:underline") #{icon.sourceSetId}
+      div(className="mt-3 grid grid-cols-2 gap-1")
+        each button, index in [
+          ~ { onClick: () => void copy(`${iconKey(icon)}:svg`, getSvgElementSnippet(icon, size)), ariaLabel: `Copy SVG for ${icon.name}`, text: copiedName === `${iconKey(icon)}:svg` ? 'Copied' : 'SVG' },
+          ~ { onClick: () => void copy(`${iconKey(icon)}:symbol`, getIconSymbolSnippet(icon)), ariaLabel: `Copy Beast symbol for ${icon.name}`, text: copiedName === `${iconKey(icon)}:symbol` ? 'Copied' : 'Symbol' },
+          ~ ] key index
+          button(type="button" onClick={button.onClick} aria-label={button.ariaLabel} className="rounded-md bg-secondary px-2 py-1.5 text-[10px] font-medium hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring") #{button.text}

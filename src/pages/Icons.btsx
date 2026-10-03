@@ -1,0 +1,138 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'octane'
+import { Link } from '@octanejs/tanstack-router'
+import { fetchAndCacheMetadata, fetchCollections, prefetchIconSet } from '@/hooks/use-icon-cache'
+import { useIconMeta } from '@/hooks/use-icon-meta'
+import { validIconSetId, type IconCollections } from '@/lib/iconify'
+import IconShell from '@/components/IconShell.btsx'
+import Button from '@/components/ui/Button.btsx'
+import HyperList from '@/components/ui/HyperList.btsx'
+import { Icon } from '@/lib/icons'
+import { useIconFavorites } from '@/hooks/use-icon-favorites'
+import { useSearchShortcut } from '@/hooks/use-search-shortcut'
+
+module
+  const defaults = ['proicons', 'svg-spinners', 'pixelarticons', 'stash', 'lets-icons']
+  const storageKey = 'icon-sets'
+  function loadSets(): string[] {
+    try {
+      const saved = localStorage.getItem(storageKey)
+      if (saved) {
+        const parsed: unknown = JSON.parse(saved)
+        if (Array.isArray(parsed)) return [...new Set(parsed.filter((id): id is string => typeof id === 'string' && validIconSetId(id)))]
+      }
+    } catch {}
+    return defaults
+  }
+
+component IconSetCard
+  props { id, onRemove }: { id: string; onRemove: (id: string) => void }
+  setup
+    const { metadata, icons, loadingMeta, error, retry } = useIconMeta(id, { initialIconCount: 12 })
+    const preview = icons.slice(0, 6)
+    const prefetch = () => { void prefetchIconSet(id).catch(() => {}) }
+  article(className="relative flex h-full min-w-0 flex-col rounded-2xl border border-border/25 bg-card p-5")
+    div(className="mb-5 flex items-start justify-between gap-3")
+      div(className="min-w-0")
+        Link(to="/icons/$iconSetId" params={{ iconSetId: id }} onMouseEnter={prefetch} onFocus={prefetch} className="block truncate text-base font-semibold hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring") #{metadata?.name ?? id}
+        p(className="mt-1 font-mono text-[11px] text-muted-foreground") #{id}
+      Button(variant="ghost" size="icon" icon="close" aria-label={`Remove ${id} icon set`} onClick={() => onRemove(id)})
+    div(className="grid min-h-20 grid-cols-6 items-center justify-items-center gap-2 rounded-xl bg-secondary/50 px-2 py-5")
+      each icon in preview key icon.name
+        IconShell(icon={icon} size={24})
+      if !preview.length
+        span(className="col-span-6 text-xs text-muted-foreground") #{loadingMeta ? 'Loading preview…' : error ? 'Preview unavailable' : 'Loading icons…'}
+    if error
+      div(className="mt-3")
+        p(className="text-xs text-destructive" role="alert") #{error}
+        Button(label="Retry" variant="ghost" size="sm" onClick={retry} className="mt-1")
+    div(className="mt-5 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground")
+      span #{metadata ? `${metadata.total.toLocaleString()} icons` : 'Loading collection…'}
+      if metadata?.license?.url
+        a(href={metadata.license.url} target="_blank" rel="noopener noreferrer" className="hover:text-foreground hover:underline") #{metadata.license.title}
+    Link(to="/icons/$iconSetId" params={{ iconSetId: id }} onMouseEnter={prefetch} onFocus={prefetch} className="mt-5 inline-flex items-center justify-between text-xs font-medium hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring")
+      span Browse icons
+      Icon(name="arrow-right" size={16})
+
+props {}:{}
+setup
+  const [ids, setIds] = useState<string[]>(loadSets)
+  const { favorites } = useIconFavorites()
+  const [query, setQuery] = useState('')
+  const [collections, setCollections] = useState<IconCollections>({})
+  const [adding, setAdding] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [catalogError, setCatalogError] = useState<string | null>(null)
+  const [activeIndex, setActiveIndex] = useState(0)
+  const active = useRef(true)
+  const inputRef = useSearchShortcut()
+  const suggestions = useMemo(() => {
+    const term = query.trim().toLowerCase()
+    if (!term) return []
+    return Object.entries(collections).filter(([id, meta]) => !ids.includes(id) && `${id} ${meta.name ?? ''} ${meta.category ?? ''}`.toLowerCase().includes(term)).slice(0, 8)
+  }, [query, collections, ids])
+  const remove = useCallback((id: string) => setIds(current => current.filter(value => value !== id)), [])
+  const cards = useMemo(() => ids.map(id => ({ id, onRemove: remove })), [ids, remove])
+  const add = async (value: string) => {
+    const id = value.trim().toLowerCase()
+    if (adding) return
+    if (!validIconSetId(id)) { setError('Enter a set ID such as lucide or svg-spinners.'); return }
+    if (ids.includes(id)) { setError('This icon set is already in your library.'); return }
+    setAdding(true)
+    setError(null)
+    try {
+      await fetchAndCacheMetadata(id)
+      if (active.current) { setIds(current => current.includes(id) ? current : [...current, id]); setQuery(''); setActiveIndex(0) }
+    } catch (failure) {
+      if (active.current) setError(failure instanceof Error ? failure.message : 'Could not add icon set.')
+    } finally { if (active.current) setAdding(false) }
+  }
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (event.isComposing) return
+    const controlNavigation = event.ctrlKey && !event.metaKey && !event.altKey && !event.shiftKey
+    if (suggestions.length && (event.key === 'ArrowDown' || (controlNavigation && event.key === 'n'))) { event.preventDefault(); setActiveIndex(index => Math.min(index + 1, suggestions.length - 1)) }
+    else if (suggestions.length && (event.key === 'ArrowUp' || (controlNavigation && event.key === 'p'))) { event.preventDefault(); setActiveIndex(index => Math.max(index - 1, 0)) }
+    else if (event.key === 'Enter') { event.preventDefault(); void add(suggestions[activeIndex]?.[0] ?? query) }
+    else if (event.key === 'Escape') { setQuery(''); setError(null) }
+  }
+  useEffect(() => {
+    active.current = true
+    void fetchCollections().then(data => { if (active.current) setCollections(data) }).catch(() => {
+      if (active.current) setCatalogError('Suggestions are unavailable. You can still add a set by its ID.')
+    })
+    return () => { active.current = false }
+  }, [])
+  useEffect(() => { try { localStorage.setItem(storageKey, JSON.stringify(ids)) } catch {} }, [ids])
+
+section(className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-12")
+  header(className="mb-8")
+    p(className="mb-3 font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground") Design toolkit
+    h1(className="text-3xl font-semibold tracking-tight") Icon Sets
+    p(className="mt-3 text-sm leading-6 text-muted-foreground") Browse your favorite collections and copy SVGs or Beast icon symbols.
+    Link(to="/icons/favorites" className="mt-4 inline-flex rounded-lg bg-secondary px-4 py-2 text-xs font-medium hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring") #{`Favorites (${favorites.length})`}
+  div(className="mb-8 max-w-xl")
+    label(for="icon-set-id" className="mb-2 block text-xs text-muted-foreground") Add an icon set
+    div(className="flex items-start gap-2")
+      div(className="relative min-w-0 flex-1")
+        input#icon-set-id(ref={inputRef} type="text" value={query} disabled={adding} autoComplete="off" placeholder="Search collections or enter a set ID…" onInput={(event: Event) => { setQuery((event.currentTarget as HTMLInputElement).value); setActiveIndex(0); setError(null) }} onKeyDown={onKeyDown} className="w-full rounded-xl border border-border/30 bg-card px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" role="combobox" aria-keyshortcuts="/" aria-autocomplete="list" aria-expanded={suggestions.length > 0} aria-controls="icon-set-suggestions" aria-activedescendant={suggestions[activeIndex] ? `suggestion-${activeIndex}` : undefined})
+        if suggestions.length
+          ul#icon-set-suggestions(className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-xl border border-border/30 bg-popover p-1 shadow-lg" role="listbox")
+            each suggestion, index in suggestions key suggestion[0]
+              li(role="presentation")
+                button(id={`suggestion-${index}`} type="button" role="option" aria-selected={activeIndex === index} disabled={adding} onMouseDown={(event: MouseEvent) => event.preventDefault()} onClick={() => void add(suggestion[0])} className={"flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left hover:bg-secondary " + (activeIndex === index ? 'bg-secondary' : '')})
+                  div(className="min-w-0")
+                    span(className="block truncate text-sm font-medium") #{suggestion[1].name ?? suggestion[0]}
+                    span(className="block font-mono text-[10px] text-muted-foreground") #{suggestion[0]}
+                  span(className="text-xs text-muted-foreground") #{suggestion[1].total?.toLocaleString() ?? ''}
+      Button(label="Add set" disabled={!query.trim() || adding} pending={adding} pendingLabel="Adding…" onClick={() => void add(query)} className="mt-0.5")
+    if error
+      p(className="mt-3 text-xs text-destructive" role="alert") #{error}
+    if catalogError
+      p(className="mt-3 text-xs text-muted-foreground" role="status") #{catalogError}
+  if cards.length
+    HyperList(data={cards} keyId="id" max={cards.length} component={IconSetCard} direction="up" container="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" itemStyle="min-w-0")
+  if !ids.length
+    p(className="rounded-2xl border border-dashed border-border/30 p-8 text-center text-sm text-muted-foreground") Your library is empty. Add an icon set above to get started.
+  footer(className="mt-8 text-xs text-muted-foreground")
+    span Icons provided by 
+    a(href="https://iconify.design/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4") Iconify
+    span . Each collection has its own license.

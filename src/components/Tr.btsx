@@ -1,0 +1,166 @@
+import { trellisDefaultLayout, trellisTypes } from "@/layout"
+import { createWorkspace, type WorkspaceHandle, type WorkspaceSnapshot } from "@danfessler/trellis"
+import "@danfessler/trellis/style.css"
+import "./trellis-demo.css"
+import { useEffect, useRef, useState } from "octane"
+import { openDoc } from "./ws"
+import { useTheme } from "./ThemeProvider.btsx"
+import { compactTrellisStyle, defaultTrellisStyle, loadTrellisStyle, saveTrellisStyle, spaciousTrellisStyle, trellisStyleOptions, type DemoNavigation, type DemoTheme, type TrellisStyleSettings } from "./trellis-settings"
+
+props { }: { }
+setup
+  const hostRef = useRef<HTMLDivElement | null>(null)
+  const wsRef = useRef<WorkspaceHandle | null>(null)
+  const { theme } = useTheme()
+  const [snapshot, setSnapshot] = useState<WorkspaceSnapshot | null>(null)
+  const [style, setStyle] = useState<TrellisStyleSettings>(loadTrellisStyle())
+  const hiddenFiles = snapshot?.hidden.find((panel) => panel.views.some((view) => view.type === 'files'))
+  const updateStyle = (patch: Partial<TrellisStyleSettings>) => setStyle((current) => ({ ...current, ...patch }))
+  const nextNotePath = (ws: WorkspaceHandle, prefix: string) => {
+    const paths = new Set(ws.views({ type: 'doc' }).map((view) => String(view.params.path)))
+    let index = 1
+    while (paths.has(`${prefix} ${index}`)) index += 1
+    return `${prefix} ${index}`
+  }
+
+  // Own the workspace for as long as the host element is mounted.
+  useEffect(() => {
+    const host = hostRef.current
+    if (host === null) return
+    const ws = createWorkspace(host, {
+      ...trellisStyleOptions(style, theme),
+      types: trellisTypes,
+      defaultLayout: trellisDefaultLayout,
+      persist: { key: 'beast-dashboard-trellis-demo', version: 1 },
+      label: 'Trellis feature demo'
+    })
+    wsRef.current = ws
+    setSnapshot(ws.getSnapshot())
+    const unsubscribe = ws.subscribe(() => setSnapshot(ws.getSnapshot()))
+    return () => {
+      unsubscribe()
+      wsRef.current = null
+      ws.destroy()
+    }
+  }, [])
+
+  useEffect(() => {
+    wsRef.current?.update(trellisStyleOptions(style, theme))
+    saveTrellisStyle(style)
+  }, [style, theme])
+
+  const openLayoutSource = () => {
+    const ws = wsRef.current
+    if (ws !== null) openDoc(ws, 'src/layout.ts')
+  }
+
+  const openNote = () => {
+    const ws = wsRef.current
+    if (ws !== null) ws.open('doc', { params: { path: nextNotePath(ws, 'Scratch note') }, placement: 'stage', reuse: 'none' })
+  }
+
+  const splitNote = () => {
+    const ws = wsRef.current
+    if (ws === null) return
+    const target = ws.views({ type: 'doc' }).find((view) => view.placement === 'stage')?.panelId
+    ws.open('doc', {
+      params: { path: nextNotePath(ws, 'Split note') },
+      placement: target ? { beside: target, edge: 'right', share: 0.35 } : 'stage',
+      reuse: 'none'
+    })
+  }
+
+  const openPreview = () => wsRef.current?.open('preview', { placement: 'stage', reuse: 'type' })
+  const openInspector = () => wsRef.current?.open('inspector', { placement: 'side', reuse: 'type' })
+
+  const togglePreviewFloat = () => {
+    const ws = wsRef.current
+    if (ws === null) return
+    const preview = ws.views({ type: 'preview' })[0] ?? ws.open('preview', { placement: 'stage' })
+    if (preview.placement === 'floating') ws.dock(preview.id, 'stage')
+    else ws.float(preview.id)
+  }
+
+  const toggleFiles = () => {
+    const ws = wsRef.current
+    if (ws === null) return
+    const hidden = ws.getSnapshot().hidden.find((panel) => panel.views.some((view) => view.type === 'files'))
+    if (hidden) ws.restore(hidden.panelId)
+    else {
+      const files = ws.views({ type: 'files' })[0] ?? ws.open('files', { placement: 'side' })
+      ws.hide(files.panelId)
+    }
+  }
+
+  const focusActive = () => wsRef.current?.navigation.toggle()
+  const showOverview = () => wsRef.current?.navigation.overview()
+  const goBack = () => wsRef.current?.navigation.back()
+  const goForward = () => wsRef.current?.navigation.forward()
+  const resetLayout = () => wsRef.current?.reset()
+
+section(className='trellis-demo shrink-0 p-4')
+  div(className='mb-3')
+    h2(className='text-sm font-semibold') Trellis workspace
+    p(className='text-xs text-muted-foreground') Drag tabs or dividers. Layout changes are saved in this browser; sample text edits are temporary.
+  div(className='mb-3 flex flex-wrap gap-2')
+    button(type='button' onClick={openLayoutSource}) Open document
+    button(type='button' onClick={openNote}) New note
+    button(type='button' onClick={splitNote}) Split note right
+    button(type='button' onClick={openPreview}) Open preview
+    button(type='button' onClick={openInspector}) Open inspector
+    button(type='button' onClick={togglePreviewFloat}) Float / dock preview
+    button(type='button' onClick={toggleFiles}) #{hiddenFiles ? 'Restore files' : 'Hide files'}
+    button(type='button' onClick={focusActive}) Focus panel
+    button(type='button' onClick={showOverview}) Overview
+    button(type='button' onClick={goBack} disabled={!(snapshot?.canGoBack ?? false)}) Back
+    button(type='button' onClick={goForward} disabled={!(snapshot?.canGoForward ?? false)}) Forward
+    button(type='button' onClick={resetLayout}) Reset layout
+  details(className='trellis-demo-config mb-3')
+    summary Style configurator
+    div(className='trellis-demo-settings')
+      label
+        span Theme
+        select(value={style.theme} onChange={(event) => updateStyle({ theme: (event.currentTarget as HTMLSelectElement).value as DemoTheme })})
+          option(value='app') Follow app
+          option(value='light') Light
+          option(value='medium') Medium
+          option(value='dark') Dark
+          option(value='darker') Darker
+      div(className='trellis-demo-field')
+        span Accent color
+        span(className='trellis-demo-color')
+          input(type='color' aria-label='Accent color' value={style.accent ?? '#5b8cff'} onInput={(event) => updateStyle({ accent: (event.currentTarget as HTMLInputElement).value })})
+          button(type='button' onClick={() => updateStyle({ accent: null })}) Theme accent
+      label
+        span Panel gap · #{style.gap}px
+        input(type='range' min='0' max='16' value={style.gap} onInput={(event) => updateStyle({ gap: Number((event.currentTarget as HTMLInputElement).value) })})
+      label
+        span Corner radius · #{style.radius}px
+        input(type='range' min='0' max='24' value={style.radius} onInput={(event) => updateStyle({ radius: Number((event.currentTarget as HTMLInputElement).value) })})
+      label
+        span Tab bar height · #{style.tabbarHeight}px
+        input(type='range' min='28' max='56' value={style.tabbarHeight} onInput={(event) => updateStyle({ tabbarHeight: Number((event.currentTarget as HTMLInputElement).value) })})
+      label
+        span Tab inset · #{style.tabInset}px
+        input(type='range' min='0' max='12' value={style.tabInset} onInput={(event) => updateStyle({ tabInset: Number((event.currentTarget as HTMLInputElement).value) })})
+      label(className='trellis-demo-check')
+        input(type='checkbox' checked={style.fillTabs} onChange={(event) => updateStyle({ fillTabs: (event.currentTarget as HTMLInputElement).checked })})
+        span Fill tab bar
+      label
+        span Motion
+        select(value={style.motion} onChange={(event) => updateStyle({ motion: (event.currentTarget as HTMLSelectElement).value as TrellisStyleSettings['motion'] })})
+          option(value='system') System
+          option(value='full') Full
+          option(value='reduced') Reduced
+      label
+        span Navigation
+        select(value={style.navigation} onChange={(event) => updateStyle({ navigation: (event.currentTarget as HTMLSelectElement).value as DemoNavigation })})
+          option(value='focus') Focus
+          option(value='free') Free zoom
+    div(className='trellis-demo-presets')
+      button(type='button' onClick={() => setStyle(defaultTrellisStyle)}) Default
+      button(type='button' onClick={() => setStyle(compactTrellisStyle)}) Compact
+      button(type='button' onClick={() => setStyle(spaciousTrellisStyle)}) Spacious
+    p Free zoom: hold ⌘+Option on Mac or Ctrl+Alt elsewhere and drag to pan.
+  div(ref={hostRef} className='h-[min(55vh,560px)] min-h-[300px] w-full overflow-hidden')
+  p(className='mt-2 text-xs text-muted-foreground') #{snapshot?.views.length ?? 0} open views · #{snapshot?.hidden.length ?? 0} hidden panels

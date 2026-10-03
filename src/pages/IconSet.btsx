@@ -1,0 +1,6 @@
+import { useParams } from '@octanejs/tanstack-router'
+import IconList from '@/components/IconList.btsx'
+
+props {}:{}
+setup const { iconSetId } = useParams({ from: '/icons/$iconSetId' })
+IconList(key={iconSetId} iconSetId={iconSetId})

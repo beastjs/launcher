@@ -1,0 +1,35 @@
+{
+  "name": "launcher",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsrx-tsc --noEmit",
+    "check": "bun run typecheck && bun run build",
+    "gen": "bun scripts/gen/index.ts"
+  },
+  "dependencies": {
+    "@iconify/utils": "^3.1.7",
+    "@octanejs/base-ui": "0.1.58",
+    "@octanejs/motion": "^0.1.57",
+    "@octanejs/resizable-panels": "^0.0.16",
+    "@octanejs/tanstack-router": "^0.1.60",
+    "beast-tsrx": "0.7.1",
+    "clsx": "^2.1.1",
+    "octane": "0.7.1",
+    "svgo": "^4.1.0",
+    "tailwind-merge": "^3.6.0"
+  },
+  "devDependencies": {
+    "@beastjs/devtools": "^0.1.16",
+    "@tailwindcss/vite": "^4.3.3",
+    "@tsrx/typescript-plugin": "0.3.135",
+    "@types/node": "^26.2.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.3",
+    "vite": "^8.0.16"
+  }
+}

@@ -1,0 +1,19 @@
+import { Suspense, lazy } from "octane";
+import ThemeProvider from "@/components/ThemeProvider.btsx";
+import { useMobile } from "@/hooks/use-mobile";
+import Shell from "@/components/Shell.btsx";
+
+module
+  const DesktopLayout = lazy(() => import("@/layouts/DesktopLayout.btsx"))
+  const MobileLayout = lazy(() => import("@/layouts/MobileLayout.btsx"))
+
+props {}:{}
+setup
+  const isMobile = useMobile()
+ThemeProvider
+  Suspense(fallback={null})
+    if isMobile
+      MobileLayout
+    else
+      Shell
+        DesktopLayout

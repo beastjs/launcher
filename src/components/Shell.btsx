@@ -1,0 +1,5 @@
+import { type ReactNode } from "octane";
+
+props {children}: {children: ReactNode}
+div#shell(className='min-h-screen w-full')
+  | #{children}

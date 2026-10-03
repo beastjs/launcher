@@ -1,0 +1,27 @@
+import { Link } from '@octanejs/tanstack-router'
+import HyperList from '@/components/ui/HyperList.btsx'
+import { Icon } from '@/lib/icons'
+
+module
+  const converters = [{ id: 'image', title: 'Image Converter', description: 'A fresh format. A smaller file. Convert images to WebP, JPEG, or AVIF.', href: '/converters/image' }]
+
+component ConverterCard
+  props { title, description, href }: { title: string; description: string; href: string }
+  Link(to={href} className="group flex h-full flex-col rounded-2xl border border-border/30 bg-card p-6 transition-colors hover:border-accent/60 hover:bg-secondary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring")
+    div(className="mb-8 flex items-center justify-between")
+      div(className="grid size-12 place-items-center rounded-xl border border-border/20 bg-background text-foreground")
+        Icon(name="mechanics" size={24})
+      span(className="rounded-full bg-background px-2.5 py-1 font-mono text-[10px] tracking-wider text-muted-foreground") IMAGE
+    h2(className="text-lg font-semibold tracking-tight") #{title}
+    p(className="mt-2 max-w-xs text-sm leading-6 text-muted-foreground") #{description}
+    div(className="mt-8 flex items-center justify-between text-sm font-medium")
+      span Open converter
+      Icon(name="arrow-right" size={18} className="transition-transform group-hover:translate-x-1")
+
+props {}:{}
+section(className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-12")
+  header(className="mb-8")
+    p(className="mb-3 font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground") Your toolkit
+    h1(className="text-3xl font-semibold tracking-tight") Converters
+    p(className="mt-3 text-sm leading-6 text-muted-foreground") Simple tools to get your files into the right shape.
+  HyperList(keyId="id" data={converters} component={ConverterCard} direction="up" container="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" itemStyle="min-w-0")

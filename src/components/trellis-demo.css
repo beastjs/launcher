@@ -1,0 +1,195 @@
+.trellis-demo > div > button,
+.trellis-demo-presets button,
+.trellis-demo-color button {
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.35rem 0.65rem;
+  color: var(--foreground);
+  /*background: var(--card);*/
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.trellis-demo > div > button:hover,
+.trellis-demo-presets button:hover,
+.trellis-demo-color button:hover {
+  background: var(--accent);
+}
+
+.trellis-demo > div > button:focus-visible,
+.trellis-demo-config :is(button, select, input, summary):focus-visible,
+.trellis-demo-files button:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.trellis-demo > div > button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.trellis-demo-config {
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  background: var(--card);
+  font-size: 0.75rem;
+}
+
+.trellis-demo-config summary {
+  padding: 0.6rem 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.trellis-demo-config[open] summary {
+  border-bottom: 1px solid var(--border);
+}
+
+.trellis-demo-settings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.8rem 1rem;
+  padding: 0.75rem;
+}
+
+.trellis-demo-settings label,
+.trellis-demo-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.trellis-demo-settings select {
+  width: 100%;
+  min-height: 2rem;
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+  padding-inline: 0.4rem;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.trellis-demo-settings input[type='range'] {
+  width: 100%;
+  accent-color: var(--primary);
+}
+
+.trellis-demo-settings .trellis-demo-check {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.trellis-demo-color {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.trellis-demo-color input {
+  width: 2.4rem;
+  height: 2rem;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.trellis-demo-color button {
+  white-space: nowrap;
+}
+
+.trellis-demo-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0 0.75rem 0.75rem;
+}
+
+.trellis-demo-config > p {
+  padding: 0 0.75rem 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.trellis-demo-files {
+  margin: 0;
+  padding: 0.35rem;
+  list-style: none;
+}
+
+.trellis-demo-files button {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: 0.3rem;
+  padding: 0.4rem 0.55rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.trellis-demo-files button:hover {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.trellis-demo-editor {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: 0.75rem;
+  border: 0;
+  outline: 0;
+  resize: none;
+  background: transparent;
+  color: inherit;
+  font:
+    0.85rem/1.5 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+}
+
+.trellis-demo-inspector {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.85rem;
+  font-size: 0.8rem;
+}
+
+.trellis-demo-inspector > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.trellis-demo-inspector > div > span:last-child {
+  overflow: hidden;
+  max-width: 60%;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.7;
+}
+/*PANEL MENU*/
+/*.trellis [data-trellis-part='panel-menu']::before {
+  content: '⋮';
+  height: 24px;
+  font-size: 10px;
+  line-height: 1;
+}*/
+:where(.trellis [data-trellis-part='panel-menu']) {
+  margin-right: 4px!;
+}
+.trellis [data-trellis-part='panel-menu'] {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  opacity: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

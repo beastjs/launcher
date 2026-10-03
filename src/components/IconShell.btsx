@@ -1,0 +1,24 @@
+import { useId, useMemo } from 'octane'
+import { iconToSVG } from '@iconify/utils/lib/svg/build'
+import { replaceIDs } from '@iconify/utils/lib/svg/id'
+import type { IconEntry } from '@/lib/iconify'
+import { cn } from '@/lib/utils'
+
+props { icon, size = 32, className }: { icon: IconEntry; size?: number; className?: string }
+setup
+  const id = useId()
+  const svg = useMemo(() => {
+    const built = iconToSVG(icon, { width: size, height: size })
+    return { ...built, body: replaceIDs(built.body, id.replace(/:/g, '') + '-') }
+  }, [icon, size, id])
+svg(
+  ~ viewBox={svg.attributes.viewBox}
+  ~ width={size}
+  ~ height={size}
+  ~ fill="currentColor"
+  ~ xmlns="http://www.w3.org/2000/svg"
+  ~ aria-hidden="true"
+  ~ focusable="false"
+  ~ dangerouslySetInnerHTML={{ __html: svg.body }}
+  ~ className={cn('shrink-0', className)}
+  ~ )

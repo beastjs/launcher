@@ -1,0 +1,42 @@
+import {useRef } from "octane";
+import { cn } from "@/lib/utils";
+import { HEX_HEIGHT, HEX_WIDTH } from "@/lib/tiles";
+
+module
+  interface Props {
+    posX: number;
+    posY: number;
+    children?: unknown;
+  }
+module
+  const svgItems = [
+    { className: "absolute z-0 group-hover/tile:opacity-100 opacity-0 transition-all duration-300", width: HEX_WIDTH + 4, height: HEX_HEIGHT + 6, pathClassName: cn("fill-teal-500") },
+    { className: "absolute [transform-style:preserve-3d] [&>*]:[transform-style:preserve-3d]", width: HEX_WIDTH, height: HEX_HEIGHT, pathClassName: cn("dark:fill-amber-50 fill-zinc-800 group-hover/tile:shadow-xs z-10") },
+  ]
+
+props { posX, posY, children }: Props
+setup const containerRef = useRef<HTMLDivElement | null>(null);
+div(
+  ~ className="relative flex items-center justify-center z-100"
+  ~ style={{
+  ~ left: `${posX}px`,
+  ~ top: `${posY}px`,
+  ~ }}
+  ~ )
+  div(
+    ~ ref={containerRef}
+    ~ className={cn("size-full py-1 flex items-center justify-center absolute transition-all duration-1000 ease-linear")}
+    ~ )
+    each item in svgItems key item.className
+      svg(
+        ~ className={item.className}
+        ~ width={item.width}
+        ~ height={item.height}
+        ~ viewBox="0 0 140 120"
+        ~ )
+        path(
+          ~ d="M 40 0 L 100 0 Q 110 0 115 10 L 135 50 Q 140 60 135 70 L 115 110 Q 110 120 100 120 L 40 120 Q 30 120 25 110 L 5 70 Q 0 60 5 50 L 25 10 Q 30 0 40 0 Z"
+          ~ strokeWidth="0"
+          ~ className={item.pathClassName}
+          ~ )
+  div(className="relative z-10 flex items-center justify-center") #{children}

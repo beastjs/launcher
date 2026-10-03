@@ -1,0 +1,215 @@
+import { useEffect, useRef, useState } from 'octane'
+import { Link } from '@octanejs/tanstack-router'
+import Button from '@/components/ui/Button.btsx'
+import { Icon } from '@/lib/icons'
+import { useImageConverter, type ConversionOptions, type ConversionResult } from '@/hooks/use-image-converter'
+import { useBlobUrl } from '@/hooks/use-blob-url'
+
+module
+  const formats = [{ value: 'webp', label: 'WebP', description: 'Small files for the web' }, { value: 'jpeg', label: 'JPEG', description: 'Widely compatible' }, { value: 'avif', label: 'AVIF', description: 'When supported by your browser' }] as const
+  const formatSize = (bytes: number) => bytes < 1024 ? `${bytes} B` : bytes < 1024 * 1024 ? `${(bytes / 1024).toFixed(1)} KB` : `${(bytes / (1024 * 1024)).toFixed(2)} MB`
+  type FileEntry = {
+    id: number
+    file: File
+    status: 'ready' | 'queued' | 'converting' | 'done' | 'error' | 'cancelled'
+    result: ConversionResult | null
+    error: string | null
+  }
+  const validLimit = (value: string) => value === '' || (Number.isSafeInteger(Number(value)) && Number(value) > 0)
+
+component Preview
+  props { url, label, size, name }: { url: string | null; label: string; size: string; name: string }
+  div(className="overflow-hidden rounded-xl border border-border/25")
+    div(className="flex items-center justify-between gap-3 border-b border-border/20 bg-background px-4 py-3")
+      span(className="text-xs font-medium") #{label}
+      span(className="font-mono text-xs text-muted-foreground") #{size}
+    div(className="grid h-44 place-items-center bg-[conic-gradient(var(--secondary)_25%,var(--background)_0_50%,var(--secondary)_0_75%,var(--background)_0)] bg-[size:16px_16px] p-5")
+      if url
+        img(src={url} alt={name} className="max-h-full max-w-full object-contain" loading="lazy")
+      else
+        span(className="text-xs text-muted-foreground") Preview will appear here
+
+component FileCard
+  props { entry, busy, onRemove }: { entry: FileEntry; busy: boolean; onRemove: () => void }
+  setup
+    const sourceUrl = useBlobUrl(entry.file)
+    const resultUrl = useBlobUrl(entry.result?.blob ?? null)
+    const result = entry.result
+    const extension = result?.format === 'image/jpeg' ? 'jpg' : result?.format.split('/')[1]
+    const downloadName = `${entry.file.name.replace(/\.[^.]+$/, '') || 'image'}.${extension}`
+  article(className="min-w-0 rounded-2xl border border-border/25 bg-card p-4 sm:p-5")
+    header(className="mb-4 flex items-start justify-between gap-3")
+      div(className="min-w-0")
+        h2(className="truncate text-sm font-medium" title={entry.file.name}) #{entry.file.name}
+        p(className="mt-1 text-xs text-muted-foreground" role="status") #{entry.status === 'converting' ? 'Converting…' : entry.status === 'queued' ? 'Waiting in queue' : entry.status === 'done' ? 'Ready to download' : entry.status === 'error' ? 'Conversion failed' : entry.status === 'cancelled' ? 'Cancelled' : 'Ready to convert'}
+      Button(label="Remove" variant="ghost" size="sm" disabled={busy} onClick={onRemove} aria-label={`Remove ${entry.file.name}`})
+    div(className="grid gap-3 sm:grid-cols-2")
+      Preview(url={sourceUrl} label="Original" size={formatSize(entry.file.size)} name={entry.file.name})
+      Preview(url={resultUrl} label="Converted" size={result ? formatSize(result.size) : '—'} name={`Converted ${entry.file.name}`})
+    if result
+      div(className="mt-4 flex flex-wrap items-center justify-between gap-3")
+        div(className="text-xs text-muted-foreground")
+          p #{`${result.width} × ${result.height} px`}
+          p(className="mt-1") #{`${Math.abs(result.compressionRatio).toFixed(1)}% ${result.compressionRatio >= 0 ? 'smaller' : 'larger'} · ${formatSize(result.size)}`}
+        if resultUrl
+          Button(type="a" href={resultUrl} download={downloadName} label="Download image" variant="primary")
+    if entry.error
+      p(className="mt-4 rounded-lg bg-destructive/10 p-3 text-xs leading-5 text-destructive" role="alert") #{entry.error}
+
+props {}:{}
+setup
+  const { convert, terminate } = useImageConverter()
+  const [entries, setEntries] = useState<FileEntry[]>([])
+  const [format, setFormat] = useState<ConversionOptions['format']>('webp')
+  const [quality, setQuality] = useState(80)
+  const [grayscale, setGrayscale] = useState(false)
+  const [maxWidth, setMaxWidth] = useState('')
+  const [maxHeight, setMaxHeight] = useState('')
+  const [running, setRunning] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+  const [dragging, setDragging] = useState(false)
+  const generation = useRef(0)
+  const busyRef = useRef(false)
+  const nextId = useRef(0)
+  const inputRef = useRef<HTMLInputElement | null>(null)
+  const limitsValid = validLimit(maxWidth) && validLimit(maxHeight)
+  const completed = entries.filter(entry => entry.status === 'done' || entry.status === 'error').length
+  const totalSize = entries.reduce((sum, entry) => sum + entry.file.size, 0)
+  const resetResults = () => {
+    setEntries(current => current.map(entry => ({ ...entry, result: null, status: 'ready', error: null })))
+    setError(null)
+    setNotice(null)
+  }
+  const addFiles = (files: File[]) => {
+    if (!files.length || busyRef.current) return
+    const valid = files.filter(file => file.type.startsWith('image/') && file.size > 0)
+    setError(valid.length < files.length ? 'Some files were skipped. Choose non-empty image files.' : null)
+    setNotice(null)
+    const added: FileEntry[] = valid.map(file => ({ id: nextId.current++, file, status: 'ready', result: null, error: null }))
+    setEntries(current => [...current, ...added])
+  }
+  const onFileChange = (event: Event) => {
+    const input = event.currentTarget as HTMLInputElement
+    addFiles(Array.from(input.files ?? []))
+    input.value = ''
+  }
+  const onDrop = (event: DragEvent) => {
+    event.preventDefault()
+    setDragging(false)
+    addFiles(Array.from(event.dataTransfer?.files ?? []))
+  }
+  const changeFormat = (next: ConversionOptions['format']) => { setFormat(next); resetResults() }
+  const onQualityChange = (event: Event) => {
+    setQuality(Number((event.currentTarget as HTMLInputElement).value))
+    resetResults()
+  }
+  const updateEntry = (id: number, patch: Partial<FileEntry>) => {
+    setEntries(current => current.map(entry => entry.id === id ? { ...entry, ...patch } : entry))
+  }
+  const runConversion = async () => {
+    if (!entries.length || busyRef.current || !limitsValid) return
+    const token = ++generation.current
+    busyRef.current = true
+    setRunning(true)
+    setError(null)
+    setNotice(null)
+    setEntries(current => current.map(entry => ({ ...entry, result: null, error: null, status: 'queued' })))
+    const options: ConversionOptions = { format, quality: quality / 100, grayscale, maxWidth: maxWidth ? Number(maxWidth) : undefined, maxHeight: maxHeight ? Number(maxHeight) : undefined }
+    let succeeded = 0
+    for (const entry of entries) {
+      if (token !== generation.current) return
+      updateEntry(entry.id, { status: 'converting' })
+      try {
+        const result = await convert(entry.file, options)
+        if (token !== generation.current) return
+        updateEntry(entry.id, { result, status: 'done' })
+        succeeded += 1
+      } catch (failure) {
+        if (token !== generation.current) return
+        updateEntry(entry.id, { status: 'error', error: failure instanceof Error ? failure.message : 'Could not convert this image.' })
+      }
+    }
+    busyRef.current = false
+    setRunning(false)
+    setNotice(`${succeeded} of ${entries.length} ${entries.length === 1 ? 'image' : 'images'} converted.`)
+  }
+  const cancel = () => {
+    generation.current += 1
+    terminate()
+    busyRef.current = false
+    setRunning(false)
+    setEntries(current => current.map(entry => entry.status === 'queued' || entry.status === 'converting' ? { ...entry, status: 'cancelled' } : entry))
+    setNotice('Batch cancelled. Completed images are still available to download.')
+  }
+  useEffect(() => () => { generation.current += 1 }, [])
+
+section(className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-12")
+  Link(to="/converters" className="mb-6 inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring")
+    Icon(name="arrow-left" size={14})
+    span All converters
+  header(className="mb-8")
+    div(className="mb-3 flex items-center gap-2 font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground")
+      Icon(name="mechanics" size={14})
+      span Image tools
+    h1(className="text-3xl font-semibold tracking-tight") Image Converter
+    p(className="mt-3 text-sm leading-6 text-muted-foreground") Convert one image or a whole batch. Your files stay on this device.
+  div(className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]")
+    div(className="min-w-0 space-y-5")
+      div(className={"relative rounded-2xl border border-dashed p-8 text-center transition-colors " + (dragging ? 'border-accent bg-accent/10' : 'border-border/40 bg-card')} onDragOver={(event: DragEvent) => { event.preventDefault(); if (!running) setDragging(true) }} onDragLeave={() => setDragging(false)} onDrop={onDrop})
+        div(className="mx-auto mb-4 grid size-12 place-items-center rounded-xl bg-secondary")
+          Icon(name="new-folder" size={24})
+        h2(className="text-sm font-medium") Drop images here
+        p(className="mt-2 text-xs leading-5 text-muted-foreground") Select multiple PNG, JPEG, WebP, or other images your browser can open.
+        input(ref={inputRef} type="file" multiple accept="image/*" aria-label="Choose images" className="sr-only" disabled={running} onChange={onFileChange})
+        Button(label={entries.length ? 'Add images' : 'Choose images'} onClick={() => inputRef.current?.click()} disabled={running} className="mt-5")
+      if entries.length
+        div(className="flex items-center justify-between gap-3")
+          p(className="text-xs text-muted-foreground") #{`${entries.length} ${entries.length === 1 ? 'image' : 'images'} · ${formatSize(totalSize)}`}
+          Button(label="Clear all" variant="ghost" size="sm" disabled={running} onClick={() => { setEntries([]); setError(null); setNotice(null) }})
+      each entry in entries key entry.id
+        FileCard(entry={entry} busy={running} onRemove={() => { setEntries(current => current.filter(item => item.id !== entry.id)); setNotice(null) }})
+    aside(className="rounded-2xl border border-border/25 bg-card p-6")
+      h2(className="text-sm font-semibold") Export settings
+      p(className="mt-2 text-[11px] text-muted-foreground") Applied to every image in the batch.
+      fieldset(className="mt-6 space-y-2" disabled={running})
+        legend(className="mb-3 text-xs text-muted-foreground") Output format
+        each option in formats key option.value
+          label(className={"flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-colors " + (format === option.value ? 'border-foreground/40 bg-secondary' : 'border-border/20 hover:bg-secondary/50')})
+            input(type="radio" name="image-format" value={option.value} checked={format === option.value} onChange={() => changeFormat(option.value)} className="accent-foreground")
+            div
+              span(className="block text-sm font-medium") #{option.label}
+              span(className="mt-0.5 block text-[11px] text-muted-foreground") #{option.description}
+      div(className="mt-6")
+        label(for="image-quality" className="flex items-center justify-between text-xs text-muted-foreground")
+          span Quality
+          output(for="image-quality" className="font-mono text-foreground") #{quality + '%'}
+        input#image-quality(type="range" min="1" max="100" step="1" value={quality} onInput={onQualityChange} disabled={running} className="mt-4 w-full accent-foreground")
+        p(className="mt-2 text-[11px] leading-5 text-muted-foreground") Higher quality usually means a larger file.
+      label(className="mt-6 flex cursor-pointer items-center gap-3 text-sm")
+        input(type="checkbox" checked={grayscale} disabled={running} onChange={(event: Event) => { setGrayscale((event.currentTarget as HTMLInputElement).checked); resetResults() }} className="size-4 accent-foreground")
+        span Grayscale
+      fieldset(className="mt-6" disabled={running})
+        legend(className="text-xs font-medium") Dimension constraints
+        div(className="mt-3 grid grid-cols-2 gap-3")
+          label(className="text-[11px] text-muted-foreground")
+            span Max width (px)
+            input(type="number" min="1" step="1" value={maxWidth} placeholder="Original" onInput={(event: Event) => { setMaxWidth((event.currentTarget as HTMLInputElement).value); resetResults() }} className="mt-2 w-full rounded-lg border border-border/30 bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring" aria-invalid={!validLimit(maxWidth)} aria-describedby="dimension-help")
+          label(className="text-[11px] text-muted-foreground")
+            span Max height (px)
+            input(type="number" min="1" step="1" value={maxHeight} placeholder="Original" onInput={(event: Event) => { setMaxHeight((event.currentTarget as HTMLInputElement).value); resetResults() }} className="mt-2 w-full rounded-lg border border-border/30 bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring" aria-invalid={!validLimit(maxHeight)} aria-describedby="dimension-help")
+        p#dimension-help(className="mt-2 text-[11px] leading-5 text-muted-foreground") Fit within these limits, keep proportions, and never upscale. Leave blank to keep the original dimensions.
+        if !limitsValid
+          p(className="mt-2 text-xs text-destructive" role="alert") Use positive whole numbers for dimension limits.
+      if format === 'jpeg'
+        p(className="mt-4 text-xs leading-5 text-muted-foreground") JPEG does not preserve transparency.
+      div(className="mt-6 flex flex-col gap-2")
+        Button(label={entries.length > 1 ? `Convert ${entries.length} images` : 'Convert image'} variant="primary" className="w-full" disabled={!entries.length || running || !limitsValid} pending={running} pendingLabel={`Converting ${completed} / ${entries.length}…`} onClick={runConversion})
+        if running
+          fragment
+            progress(value={completed} max={entries.length} aria-label="Batch conversion progress" className="mt-2 h-1.5 w-full accent-foreground")
+            Button(label="Cancel batch" variant="ghost" onClick={cancel})
+      if error
+        p(className="mt-4 rounded-lg bg-destructive/10 p-3 text-xs leading-5 text-destructive" role="alert") #{error}
+      if notice
+        p(className="mt-4 text-xs leading-5 text-muted-foreground" role="status") #{notice}

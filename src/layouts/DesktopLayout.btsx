@@ -1,0 +1,39 @@
+import { useState } from "octane";
+import { Outlet, useLocation } from "@octanejs/tanstack-router";
+import { Group, Panel, Separator, useDefaultLayout, usePanelRef } from "@octanejs/resizable-panels";
+import Topbar from "@/components/Topbar.btsx";
+import Sidebar from "@/components/Sidebar.btsx";
+import Branched from "../components/Branched.btsx";
+
+module
+  const SEPARATOR_CLASS = "relative w-[0.5px] shrink-0 bg-border/40 outline-none transition-colors after:absolute after:inset-y-0 after:-inset-x-1.5 after:content-[''] hover:bg-focus data-[separator=active]:bg-focus _data-[separator=focus]:bg-focus/60"
+
+props {}:{}
+setup
+  const [branched, setBranched] = useState(true)
+  const path = useLocation({ select: (location) => location.pathname })
+  const { defaultLayout, onLayoutChanged } = useDefaultLayout({ id: "app-layout", panelIds: ["sidebar", "content"] })
+  const sidebarRef = usePanelRef()
+  const [isCompact, setIsCompact] = useState(false)
+  const syncCompact = () => setIsCompact(sidebarRef.current?.isCollapsed() ?? false)
+  const toggleCompact = () => {
+    const panel = sidebarRef.current
+    if (panel === null) return
+    if (panel.isCollapsed()) panel.expand()
+    else panel.collapse()
+  }
+  const toggleBranched = () => setBranched(v => !v)
+fragment
+  div(className='hidden md:block sticky top-0 z-40')
+    Topbar(toggleSidebar={toggleCompact} toggleExtra={toggleBranched} isCompact={isCompact})
+  Group(orientation="horizontal" defaultLayout={defaultLayout} onLayoutChanged={onLayoutChanged} style={{ height: 'calc(100dvh - var(--topbar-height))' }} className="overflow-hidden")
+    Panel(id="sidebar" panelRef={sidebarRef} defaultSize="200px" minSize="200px" maxSize="300px" collapsible collapsedSize="64px" onResize={syncCompact})
+      if (branched)
+        Sidebar(path={path} isCompact={isCompact})
+      else
+        Branched(path={path} isCompact={isCompact})
+    Separator(aria-label="Resize sidebar" className={SEPARATOR_CLASS})
+    Panel(id="content" minSize="30%")
+      div(className='flex h-full min-h-0 flex-col overflow-y-auto')
+        main(className='min-h-0 min-w-0 flex-1 overflow-auto')
+          Outlet
