@@ -1,0 +1,60 @@
+import { useState } from 'octane'
+import { Link } from '@octanejs/tanstack-router'
+import { useCustomIconLists } from '@/hooks/use-custom-icon-lists'
+import { createCustomIconList, validCustomIconName } from '@/lib/custom-icon-set'
+import { svgSymbol } from '@/lib/svg-symbol'
+import Button from './ui/Button.btsx'
+
+props { svg, name, disabled = false, onAdded, showManageLink = true }: { svg: string; name: string; disabled?: boolean; onAdded?: (name: string, list: string) => void; showManageLink?: boolean }
+setup
+  const { iconLists, setIconLists } = useCustomIconLists()
+  const [destination, setDestination] = useState(iconLists.selected)
+  const [newList, setNewList] = useState('')
+  const [iconName, setIconName] = useState(name)
+  const [error, setError] = useState<string | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
+  const save = () => {
+    setError(null)
+    setMessage(null)
+    try {
+      const savedName = iconName.trim()
+      if (!validCustomIconName(savedName)) throw new Error('Use lowercase letters, numbers, and dashes for the icon name.')
+      const icon = { name: savedName, svg, ...svgSymbol(svg) }
+      const target = destination === '__new__' ? newList.trim() : destination
+      setIconLists(current => {
+        const next = destination === '__new__' ? createCustomIconList(current, target) : current
+        const list = next.lists.find(item => item.name === target)
+        if (!list) throw new Error('Choose an existing list or create a new one.')
+        if (list.icons.some(item => item.name === savedName)) throw new Error('This name is already in the list. Choose another icon name.')
+        return { ...next, selected: target, lists: next.lists.map(item => item.name === target ? { ...item, icons: [...item.icons, icon] } : item) }
+      })
+      setDestination(target)
+      setNewList('')
+      setMessage(`${savedName} added to ${target}.`)
+      onAdded?.(savedName, target)
+    } catch (failure) { setError(failure instanceof Error ? failure.message : 'Could not add icon to list.') }
+  }
+
+section(aria-label="Add icon to list" className="mt-4 rounded-xl border border-border/25 bg-card p-4")
+  h2(className="text-sm font-medium") Add icon to list
+  div(className="mt-3 flex flex-wrap items-end gap-3")
+    label(className="min-w-40 flex-1 text-xs text-muted-foreground")
+      span Destination list
+      select(value={destination} onChange={(event: Event) => { setDestination((event.currentTarget as HTMLSelectElement).value); setError(null); setMessage(null) }} className="mt-2 w-full rounded-lg border border-border/25 bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring")
+        each list in iconLists.lists key list.name
+          option(value={list.name}) #{`${list.name} (${list.icons.length})`}
+        option(value="__new__") Create a new list…
+    if destination === '__new__'
+      label(className="min-w-40 flex-1 text-xs text-muted-foreground")
+        span New list name
+        input(value={newList} placeholder="my-icons" onInput={(event: Event) => setNewList((event.currentTarget as HTMLInputElement).value)} className="mt-2 w-full rounded-lg border border-border/25 bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring")
+    label(className="min-w-40 flex-1 text-xs text-muted-foreground")
+      span Icon name
+      input(value={iconName} onInput={(event: Event) => setIconName((event.currentTarget as HTMLInputElement).value)} className="mt-2 w-full rounded-lg border border-border/25 bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring")
+    Button(label={destination === '__new__' ? 'Create list and add icon' : 'Add to list'} onClick={save} disabled={disabled || !svg || !iconName.trim() || (destination === '__new__' && !newList.trim())})
+  if error
+    p(role="alert" className="mt-3 text-xs text-destructive") #{error}
+  if message
+    p(role="status" className="mt-3 text-xs text-muted-foreground") #{message}
+  if showManageLink
+    Link(to="/icons" className="mt-3 inline-block text-xs text-muted-foreground hover:text-foreground hover:underline") Manage and download lists

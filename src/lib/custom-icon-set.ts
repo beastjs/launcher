@@ -43,3 +43,34 @@ export function iconSetTypeScript(set: CustomIconSet): string {
 export function iconSetZip(set: CustomIconSet): Uint8Array {
   return zipSync(Object.fromEntries(sortedIcons(set).map(icon => [`${set.name}/${icon.name}.svg`, strToU8(icon.svg)])))
 }
+
+export interface CustomIconLists { lists: CustomIconSet[]; selected: string }
+export const customIconListsStorageKey = 'custom-icon-lists-v2'
+
+/** Migrate the original single-set draft without losing its icons. */
+export function readCustomIconLists(value: string | null, legacy: string | null = null): CustomIconLists {
+  if (value) {
+    try {
+      const parsed = JSON.parse(value)
+      if (parsed && Array.isArray(parsed.lists)) {
+        const seen = new Set<string>()
+        const lists = parsed.lists.flatMap((item: unknown) => {
+          if (!item || typeof item !== 'object' || !('name' in item) || typeof item.name !== 'string' || !validCustomIconName(item.name) || seen.has(item.name)) return []
+          seen.add(item.name)
+          return [readCustomIconSet(JSON.stringify(item))]
+        }) as CustomIconSet[]
+        if (lists.length) return { lists, selected: lists.some(list => list.name === parsed.selected) ? parsed.selected : lists[0].name }
+      }
+    } catch {}
+  }
+  const original = readCustomIconSet(legacy)
+  const name = validCustomIconName(original.name) ? original.name : 'my-icons'
+  return { lists: [{ ...original, name }], selected: name }
+}
+
+export function createCustomIconList(current: CustomIconLists, input: string): CustomIconLists {
+  const name = input.trim()
+  if (!validCustomIconName(name)) throw new Error('Use lowercase letters, numbers, and dashes for the list name.')
+  if (current.lists.some(list => list.name === name)) throw new Error('A list with this name already exists. Select it from the list menu.')
+  return { lists: [...current.lists, { name, icons: [] }], selected: name }
+}

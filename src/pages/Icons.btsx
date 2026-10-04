@@ -104,12 +104,15 @@ setup
   }, [])
   useEffect(() => { try { localStorage.setItem(storageKey, JSON.stringify(ids)) } catch {} }, [ids])
 
-section(className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-12")
-  header(className="mb-8")
-    p(className="mb-3 font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground") Design toolkit
-    h1(className="text-3xl font-semibold tracking-tight") Icon Sets
-    p(className="mt-3 text-sm leading-6 text-muted-foreground") Browse your favorite collections and copy SVGs or Beast icon symbols.
-    Link(to="/icons/favorites" className="mt-4 inline-flex rounded-lg bg-secondary px-4 py-2 text-xs font-medium hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring") #{`Favorites (${favorites.length})`}
+section(className="mx-auto w-full max-w-7xl space-y-6 p-5 p-6")
+
+
+  Link(to="/icons/favorites"
+    ~ class="flex box-border relative w-fit h-8 px-3 overflow-x-hidden overflow-y-hidden items-center gap-y-[6px] gap-x-[6px] bg-[#262626] text-[12px] leading-[11px] rounded-sm"
+    ~ )
+    span(className="relative h-[11px] font-sans font-medium text-white") Favorites
+    span(class="text-white ") #{favorites.length}
+
   PasteSvgOptimizer
   div(className="mb-8 max-w-xl")
     label(for="icon-set-id" className="mb-2 block text-xs text-muted-foreground") Add an icon set
@@ -135,6 +138,6 @@ section(className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-12")
   if !ids.length
     p(className="rounded-2xl border border-dashed border-border/30 p-8 text-center text-sm text-muted-foreground") Your library is empty. Add an icon set above to get started.
   footer(className="mt-8 text-xs text-muted-foreground")
-    span Icons provided by 
+    span Icons provided by
     a(href="https://iconify.design/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4") Iconify
     span . Each collection has its own license.

@@ -16,6 +16,12 @@
   animation: reveal-cursor 2s 2;
 }
 
+.breadcrumb-reveal {
+  /* Leave room for keyboard focus rings inside the reveal mask. */
+  padding: 2px;
+  margin: -2px;
+}
+
 @keyframes reveal-window {
   from {
     transform: translateX(-100%);

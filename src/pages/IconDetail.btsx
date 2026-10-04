@@ -9,6 +9,8 @@ import { iconKey } from '@/lib/icon-favorites'
 import { getSvgElementSnippet, type IconEntry } from '@/lib/iconify'
 import Button from '@/components/ui/Button.btsx'
 import { Icon } from '@/lib/icons'
+import AddIconToList from '@/components/AddIconToList.btsx'
+import { svgSymbol } from '@/lib/svg-symbol'
 
 module
   const bytesLabel = (bytes: number) => bytes < 1024 ? `${bytes} B` : `${(bytes / 1024).toFixed(2)} KB`
@@ -47,12 +49,12 @@ component Optimizer
     const sourceBytes = sourceBlob.size
     const symbol = useMemo(() => {
       if (!result) return ''
-      const root = new DOMParser().parseFromString(result.svg, 'image/svg+xml').documentElement
-      return `${JSON.stringify(icon.name)}: ${JSON.stringify({ symbol: root.innerHTML, viewBox: root.getAttribute('viewBox') ?? '0 0 24 24', set: icon.sourceSetId }, null, 2)}`
+      return `${JSON.stringify(icon.name)}: ${JSON.stringify({ ...svgSymbol(result.svg), set: icon.sourceSetId }, null, 2)}`
     }, [result, icon])
   div(className="mt-6 flex flex-wrap items-center gap-3")
     Button(label={isFavorite ? 'Remove favorite' : 'Save favorite'} aria-pressed={isFavorite} onClick={() => toggle(icon)} variant="ghost")
     p(className="text-xs text-muted-foreground" role="status") #{working ? 'Optimizing SVG…' : result ? `${bytesLabel(result.originalBytes)} → ${bytesLabel(result.optimizedBytes)} · ${Math.abs(result.savings).toFixed(1)}% ${result.savings >= 0 ? 'smaller' : 'larger'}` : 'Ready to optimize'}
+  AddIconToList(svg={result?.svg ?? ''} name={`${icon.sourceSetId}-${icon.name}`} disabled={!result || working})
   div(className="my-6 flex flex-wrap items-end gap-5 rounded-xl border border-border/25 bg-card p-4")
     label(className="w-44 text-xs text-muted-foreground")
       span #{`Decimal precision · ${precision}`}

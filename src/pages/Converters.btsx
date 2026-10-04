@@ -1,9 +1,12 @@
 import { Link } from '@octanejs/tanstack-router'
 import HyperList from '@/components/ui/HyperList.btsx'
 import { Icon } from '@/lib/icons'
+import { VectorFieldAnimation, type FieldType } from '@/lib/fields'
+import { useEffect, useRef } from 'octane'
 
 module
-  const converters = [{ id: 'image', title: 'Image Converter', description: 'A fresh format. A smaller file. Convert images to WebP, JPEG, or AVIF.', href: '/converters/image' }]
+  const converters = [{ id: 'image', title: 'Image Converter', description: 'Convert images to WebP, JPEG, or AVIF.', href: '/converters/image' }]
+
 
 component ConverterCard
   props { id, title, description, href }: { id: string; title: string; description: string; href: string }
@@ -19,8 +22,26 @@ component ConverterCard
       Icon(name="arrow-right" size={18} className="transition-transform group-hover:translate-x-1")
 
 props {}:{}
-section(className="mx-auto w-full max-w-7xl p-5 md:p-6")
+setup
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const animation = new VectorFieldAnimation(canvas)
+    const changeField = () => {
+      animation.setField('vortex')
+    }
+    animation.start()
+    document.addEventListener('click', changeField)
+    return () => {
+      document.removeEventListener('click', changeField)
+      animation.destroy()
+    }
+  }, [])
+
+section(className="mx-auto w-full max-w-7xl p-5 md:p-6 relative w-[calc(100dvw-64px)] h-[calc(100dvh-64px)] overflow-hidden")
   header(className="mb-8 hidden")
     p(className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground") Media
     h1(className="text-3xl font-semibold tracking-tight") Converters
-  HyperList(keyId="id" data={converters} component={ConverterCard} direction="up" container="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" itemStyle="min-w-0")
+  canvas(id="fieldCanvas" ref={canvasRef} className="absolute inset-0 z-0")
+  HyperList(keyId="id" data={converters} component={ConverterCard} direction="up" container="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 relative z-10" itemStyle="min-w-0")

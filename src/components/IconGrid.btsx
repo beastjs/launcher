@@ -3,12 +3,36 @@ import { useCopy } from '@/hooks/use-copy'
 import { iconKey } from '@/lib/icon-favorites'
 import { getIconSymbolSnippet, getSvgElementSnippet, type IconEntry } from '@/lib/iconify'
 import IconShell from './IconShell.btsx'
+import { useEffect, useRef, useState } from 'octane'
+import AddIconToList from './AddIconToList.btsx'
 
 props { icons, size = 32, favoriteKeys, onToggleFavorite, showCollection = false }: { icons: IconEntry[]; size?: number; favoriteKeys: Set<string>; onToggleFavorite: (icon: IconEntry) => void; showCollection?: boolean }
-setup const { copy, copiedName, error } = useCopy()
+setup
+  const { copy, copiedName, error } = useCopy()
+  const [pickedIcon, setPickedIcon] = useState<IconEntry | null>(null)
+  const [addedLists, setAddedLists] = useState<Record<string, string>>({})
+  const [addedMessage, setAddedMessage] = useState('')
+  const dialogRef = useRef<HTMLDialogElement | null>(null)
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (pickedIcon && dialog && !dialog.open) dialog.showModal()
+    else if (!pickedIcon && dialog?.open) dialog.close()
+  }, [pickedIcon])
+  const added = (name: string, list: string) => {
+    if (pickedIcon) setAddedLists(current => ({ ...current, [iconKey(pickedIcon)]: list }))
+    setAddedMessage(`${name} added to ${list}.`)
+    setPickedIcon(null)
+  }
 
 if error
   p(className="mb-4 text-xs text-destructive" role="alert") #{error}
+p(className="sr-only" role="status" aria-live="polite") #{addedMessage}
+dialog(ref={dialogRef} aria-label="Add icon to list" onCancel={() => setPickedIcon(null)} onClose={() => setPickedIcon(null)} className="m-auto w-[calc(100%_-_2rem)] max-w-xl rounded-2xl border border-border/30 bg-background p-5 text-foreground shadow-2xl backdrop:bg-black/50")
+  div(className="flex items-center justify-between gap-3")
+    p(className="truncate text-sm font-medium") #{pickedIcon ? iconKey(pickedIcon) : 'Add icon to list'}
+    button(type="button" onClick={() => setPickedIcon(null)} aria-label="Close list picker" className="rounded-lg px-3 py-2 text-xs hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring") Close
+  if pickedIcon
+    AddIconToList(key={iconKey(pickedIcon)} svg={getSvgElementSnippet(pickedIcon, pickedIcon.sourceHeight)} name={`${pickedIcon.sourceSetId}-${pickedIcon.name}`} onAdded={added} showManageLink={false})
 div(className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6")
   each icon in icons key iconKey(icon)
     article(className="group relative flex min-w-0 flex-col rounded-xl border border-border/20 bg-card p-3 transition-colors hover:border-border/50")
@@ -37,6 +61,7 @@ div(className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols
         Link(to="/icons/$iconSetId/$iconName" params={{iconSetId: icon.sourceSetId, iconName: icon.name}} className="hover:text-foreground hover:underline") #{icon.name}
       if showCollection
         Link(to="/icons/$iconSetId" params={{iconSetId: icon.sourceSetId}} className="mt-1 truncate text-center font-mono text-[10px] text-muted-foreground hover:underline") #{icon.sourceSetId}
+      button(type="button" onClick={() => setPickedIcon(icon)} className="mt-3 truncate rounded-md bg-secondary px-2 py-1.5 text-center text-[10px] font-medium hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label={`Add ${iconKey(icon)} to a list`} title={addedLists[iconKey(icon)] ? `Added to ${addedLists[iconKey(icon)]}. Click to choose another list.` : 'Add to list'}) #{addedLists[iconKey(icon)] ? `Added to ${addedLists[iconKey(icon)]}` : 'Add to list'}
       div(className="mt-3 grid grid-cols-2 gap-1")
         each button, index in [
           ~ { onClick: () => void copy(`${iconKey(icon)}:svg`, getSvgElementSnippet(icon, size)), ariaLabel: `Copy SVG for ${icon.name}`, text: copiedName === `${iconKey(icon)}:svg` ? 'Copied' : 'SVG' },

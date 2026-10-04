@@ -11,7 +11,7 @@ module
 module
   const svgItems = [
     { className: "absolute z-0 group-hover/tile:opacity-100 opacity-0 transition-all duration-300", width: HEX_WIDTH + 4, height: HEX_HEIGHT + 6, pathClassName: cn("fill-teal-500") },
-    { className: "absolute [transform-style:preserve-3d] [&>*]:[transform-style:preserve-3d]", width: HEX_WIDTH, height: HEX_HEIGHT, pathClassName: cn("dark:fill-amber-50 fill-zinc-800 group-hover/tile:shadow-xs z-10") },
+    { className: "absolute [transform-style:preserve-3d] [&>*]:[transform-style:preserve-3d]", width: HEX_WIDTH, height: HEX_HEIGHT, pathClassName: cn("dark:fill-[#262626] fill-zinc-800 group-hover/tile:shadow-xs z-10") },
   ]
 
 props { posX, posY, children }: Props
