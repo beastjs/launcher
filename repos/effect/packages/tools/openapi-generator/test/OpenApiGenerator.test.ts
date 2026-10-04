@@ -1,5 +1,4 @@
 import * as OpenApiGenerator from "@effect/openapi-generator/OpenApiGenerator"
-import { stringLiteral } from "../src/Utils.ts"
 import { assert, describe, it } from "@effect/vitest"
 import * as Effect from "effect/Effect"
 import type { OpenAPISpec, OpenAPISpecOperation, OpenAPISpecPathItem } from "effect/http-api/OpenApi"
@@ -8,6 +7,7 @@ import { spawnSync } from "node:child_process"
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
+import { stringLiteral } from "../src/Utils.ts"
 
 // These integration checks start a fresh TypeScript compiler under CI load.
 const compilationTimeout = 60_000

@@ -57,7 +57,7 @@ describe("Prompt.Date", () => {
       const result = yield* Prompt.run(Prompt.Date({
         message: "When",
         initial,
-        dateMask: '"' + "\\".repeat(100) + "DD"
+        dateMask: "\"" + "\\".repeat(100) + "DD"
       }))
       assert.deepStrictEqual(result, initial)
     }).pipe(Effect.provide(TestLayer)))
