@@ -1,4 +1,5 @@
 import * as OpenApiGenerator from "@effect/openapi-generator/OpenApiGenerator"
+import { stringLiteral } from "../src/Utils.ts"
 import { assert, describe, it } from "@effect/vitest"
 import * as Effect from "effect/Effect"
 import type { OpenAPISpec, OpenAPISpecOperation, OpenAPISpecPathItem } from "effect/http-api/OpenApi"
@@ -3036,7 +3037,7 @@ export type ConditionalConfig = Assert<Equal<Effect.Success<typeof conditionalCo
     }
 
     it.effect("quotes static path text with and without parameters", () => {
-      const prefix = "/files/\"`\\\n/"
+      const prefix = "/files/\"`\\\n/</script>\u2028/"
       const suffix = "/content\"`"
       const operation: OpenAPISpecOperation = {
         operationId: "read",
@@ -3062,8 +3063,8 @@ export type ConditionalConfig = Assert<Equal<Effect.Success<typeof conditionalCo
           }
         }
       }, [
-        `HttpClientRequest.get(${JSON.stringify(prefix + suffix)})`,
-        `() => ${JSON.stringify(prefix)} + __encodePathParam(id) + ${JSON.stringify(suffix)}`
+        `HttpClientRequest.get(${stringLiteral(prefix + suffix)})`,
+        `() => ${stringLiteral(prefix)} + __encodePathParam(id) + ${stringLiteral(suffix)}`
       ])
     })
 

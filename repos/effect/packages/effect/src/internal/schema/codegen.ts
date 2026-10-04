@@ -2,6 +2,11 @@ import type { CompiledDecoder } from "../../schema/SchemaCompiler.ts"
 import type { runtime } from "../../schema/SchemaCompiler/runtime.ts"
 import * as SchemaAST from "../../SchemaAST.ts"
 
+// Keep generated literals safe when a caller embeds generated code in HTML.
+const stringLiteral = (value: string): string =>
+  JSON.stringify(value).replace(/[<>\u2028\u2029]/g, (char) =>
+    `\\u${char.charCodeAt(0).toString(16).padStart(4, "0")}`)
+
 const getEncodingChecks = (ast: SchemaAST.AST): SchemaAST.Checks | undefined =>
   "encodingChecks" in ast ? ast.encodingChecks : undefined
 const getExpectedKeys = (ast: SchemaAST.Objects): ReadonlyArray<PropertyKey> =>
@@ -182,7 +187,7 @@ type Emitter = {
 const variable = (emitter: Emitter): string => `v${emitter.next++}`
 
 const propertyKey = (emitter: Emitter, key: PropertyKey, reference: string): string =>
-  typeof key === "string" ? JSON.stringify(key) : constant(emitter, key, reference)
+  typeof key === "string" ? stringLiteral(key) : constant(emitter, key, reference)
 
 const propertyPresence = (input: string, key: string, name: PropertyKey): string =>
   name === "__proto__" ? `Object.hasOwn(${input},${key})` : `${key} in ${input}`
@@ -866,7 +871,7 @@ const emitObject = (ast: SchemaAST.Objects): string => {
     "let r,t,value"
   ]
   ast.propertySignatures.forEach((property, index) => {
-    const key = typeof property.name === "symbol" ? `properties[${index}].name` : JSON.stringify(String(property.name))
+    const key = typeof property.name === "symbol" ? `properties[${index}].name` : stringLiteral(String(property.name))
     const present = property.name === "__proto__" ? `Object.hasOwn(i,${key})` : `${key} in i`
     const handle = `if(r===R.sameExit){if(h${index}){${assignProperty("out", key, `v${index}`, property.name)}}}else{` +
       `if(!R.effectIsExit(r))return resume(state,${index},r);` +

@@ -50,6 +50,18 @@ const toRawFrames = (lines: ReadonlyArray<unknown>) =>
 const findFrame = (frames: ReadonlyArray<string>, text: string) => frames.find((frame) => frame.includes(text))
 
 describe("Prompt.Date", () => {
+  it.effect("handles long unterminated quoted masks without backtracking", () =>
+    Effect.gen(function*() {
+      yield* MockTerminal.inputKey("enter")
+      const initial = new Date(2024, 0, 1, 12)
+      const result = yield* Prompt.run(Prompt.Date({
+        message: "When",
+        initial,
+        dateMask: '"' + "\\".repeat(100) + "DD"
+      }))
+      assert.deepStrictEqual(result, initial)
+    }).pipe(Effect.provide(TestLayer)))
+
   it.effect("renders two-digit years, teen ordinals, and noon meridiem correctly", () =>
     Effect.gen(function*() {
       const initial = DateTime.toDateUtc(DateTime.makeZonedUnsafe(

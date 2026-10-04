@@ -1357,13 +1357,13 @@ const processPath = (path: string): {
   const fragments: Array<string> = []
   let offset = 0
   for (const match of path.matchAll(/{([^}]+)}/g)) {
-    fragments.push(JSON.stringify(path.slice(offset, match.index)))
+    fragments.push(Utils.stringLiteral(path.slice(offset, match.index)))
     const id = Utils.camelize(match[1])
     pathIds.push(id)
     fragments.push(`__encodePathParam(${id})`)
     offset = match.index + match[0].length
   }
-  fragments.push(JSON.stringify(path.slice(offset)))
+  fragments.push(Utils.stringLiteral(path.slice(offset)))
   const pathTemplate = fragments.join(" + ")
   return { pathIds, pathTemplate } as const
 }

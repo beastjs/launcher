@@ -10,6 +10,29 @@ import { fileURLToPath, pathToFileURL } from "node:url"
 import { roots, schemas, suspendEvaluations } from "./fixtures/aot.ts"
 
 describe("SchemaAOTCompiler", { concurrent: false }, () => {
+  it("escapes HTML delimiters in property keys while preserving decoding", async () => {
+    const key = "</script>\u2028\\quoted"
+    const schema = Schema.Struct({ [key]: Schema.String })
+    const directory = mkdtempSync(fileURLToPath(new URL("../../.schema-aot-escaping-test-", import.meta.url)))
+    try {
+      const source = SchemaAOTCompiler.compile([{ ast: schema.ast, operations: ["decode", "is"] }])
+      assert.notInclude(source, "</script>")
+      assert.include(source, "\\u003c/script\\u003e")
+      const file = join(directory, "decode.mjs")
+      writeFileSync(file, source)
+      const generated = await import(pathToFileURL(file).href)
+      generated.install([schema.ast])
+      const { decode, is } = CompilerRegistry.resolve(schema.ast)
+      assert.ok(decode)
+      assert.ok(is)
+      const input = { [key]: "safe" }
+      assert.deepStrictEqual(decode(input, SchemaAST.defaultParseOptions), input)
+      assert.isTrue(is(input, SchemaAST.defaultParseOptions))
+    } finally {
+      rmSync(directory, { recursive: true, force: true })
+    }
+  })
+
   it("emits deterministic modules without installing a decoder", () => {
     let checks = 0
     const schema = Schema.Struct({
