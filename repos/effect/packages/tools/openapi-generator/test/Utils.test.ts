@@ -13,6 +13,16 @@ import * as Schema from "effect/Schema"
 import * as Stream from "effect/Stream"
 import { rolldown } from "rolldown"
 
+it("escapes nested code literals without changing their JSON values", () => {
+  const text = "</script>\u2028\u2029\\quoted"
+  for (const value of [text, { [text]: [text] }, { binary: [text], voidSuccess: [], voidError: [text] }]) {
+    const literal = Utils.jsonLiteral(value)
+    assert.notMatch(literal, /[<>\u2028\u2029]/)
+    assert.deepStrictEqual(JSON.parse(literal), value)
+  }
+  assert.strictEqual(Utils.jsonLiteral(undefined), "undefined")
+})
+
 const modules = {
   "effect/Data": Data,
   "effect/Effect": Effect,

@@ -799,7 +799,7 @@ export const make = (
 
     const successCodes = Array.from(
       responses.successSchemas.keys(),
-      (status) => JSON.stringify(normalizeSuccessStatus(responses, status))
+      (status) => Utils.stringLiteral(normalizeSuccessStatus(responses, status))
     ).join(", ")
     const errorCodes = responses.errorSchemas.size > 0 &&
       Object.fromEntries(responses.errorSchemas.entries())
@@ -814,9 +814,9 @@ export const make = (
         voidSuccess: Array.from(responses.voidSuccessStatuses),
         voidError: Array.from(responses.voidErrorStatuses)
       }
-      requestArgs.push(errorCodes ? JSON.stringify(errorCodes) : "undefined", JSON.stringify(responseCodes))
+      requestArgs.push(errorCodes ? Utils.jsonLiteral(errorCodes) : "undefined", Utils.jsonLiteral(responseCodes))
     } else if (errorCodes) {
-      requestArgs.push(JSON.stringify(errorCodes))
+      requestArgs.push(Utils.jsonLiteral(errorCodes))
     }
     pipeline.push(`onRequest(${configAccessor})(${requestArgs.join(", ")})`)
 
