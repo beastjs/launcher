@@ -1915,7 +1915,7 @@ const handleDateProcess = (options: DateOptionsReq) => {
 }
 
 const DATE_PART_REGEXP =
-  /\\(.)|"((?:\\["\\]|[^"])+)"|(D[Do]?|d{3,4}|d)|(M{1,4})|(YY(?:YY)?)|([aA])|([Hh]{1,2})|(m{1,2})|(s{1,2})|(S{1,4})|./g
+  /\\(.)|"((?:\\[\s\S]|[^"\\])+)"|(D[Do]?|d{3,4}|d)|(M{1,4})|(YY(?:YY)?)|([aA])|([Hh]{1,2})|(m{1,2})|(s{1,2})|(S{1,4})|./g
 
 const regExpGroups: Record<number, (params: DatePartParams) => DatePart> = {
   1: ({ token, ...opts }) => new Token({ token: token.replace(/\\(.)/g, "$1"), ...opts }),

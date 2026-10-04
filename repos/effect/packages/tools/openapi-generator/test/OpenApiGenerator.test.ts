@@ -7,6 +7,7 @@ import { spawnSync } from "node:child_process"
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
+import { stringLiteral } from "../src/Utils.ts"
 
 // These integration checks start a fresh TypeScript compiler under CI load.
 const compilationTimeout = 60_000
@@ -3036,7 +3037,7 @@ export type ConditionalConfig = Assert<Equal<Effect.Success<typeof conditionalCo
     }
 
     it.effect("quotes static path text with and without parameters", () => {
-      const prefix = "/files/\"`\\\n/"
+      const prefix = "/files/\"`\\\n/</script>\u2028/"
       const suffix = "/content\"`"
       const operation: OpenAPISpecOperation = {
         operationId: "read",
@@ -3062,8 +3063,8 @@ export type ConditionalConfig = Assert<Equal<Effect.Success<typeof conditionalCo
           }
         }
       }, [
-        `HttpClientRequest.get(${JSON.stringify(prefix + suffix)})`,
-        `() => ${JSON.stringify(prefix)} + __encodePathParam(id) + ${JSON.stringify(suffix)}`
+        `HttpClientRequest.get(${stringLiteral(prefix + suffix)})`,
+        `() => ${stringLiteral(prefix)} + __encodePathParam(id) + ${stringLiteral(suffix)}`
       ])
     })
 

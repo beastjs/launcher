@@ -500,7 +500,7 @@ function normalizePathName(filePath: string): string {
 }
 
 function normalizePackagePath(filePath: string): string {
-  return normalizePathName(filePath).replace(/^\.\//, "./")
+  return normalizePathName(filePath)
 }
 
 function escapeRegExp(value: string): string {

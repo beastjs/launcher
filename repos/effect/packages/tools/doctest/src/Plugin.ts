@@ -10,14 +10,17 @@ import { transform } from "./Transform.ts"
 
 const runner = "@effect/doctest/Runner"
 
+const stringLiteral = (value: string): string =>
+  JSON.stringify(value).replace(/[<>\u2028\u2029]/g, (char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, "0")}`)
+
 const collectorModule = (
   file: string,
   snippets: ReadonlyArray<Source.Snippet>,
   version?: string | undefined
 ): string => {
   const tests = snippets.map((snippet, index) => {
-    const id = JSON.stringify(Protocol.snippetId(file, index, version))
-    const label = JSON.stringify(snippet.name ?? `line ${snippet.line}`)
+    const id = stringLiteral(Protocol.snippetId(file, index, version))
+    const label = stringLiteral(snippet.name ?? `line ${snippet.line}`)
     return `test(${label}, () => import(${id}))`
   })
 

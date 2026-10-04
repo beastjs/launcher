@@ -162,7 +162,7 @@ export class Discovery extends Context.Service<Discovery, {
           if (capture === undefined) {
             continue
           }
-          const key = keyPattern.replace("*", capture)
+          const key = keyPattern.replaceAll("*", () => capture)
           const module = key === "." ? packageInfo.name : `${packageInfo.name}${key.slice(1)}`
           const excluded = Object.entries(exportsMap).some(([excludedKey, excludedTarget]) =>
             excludedTarget === null && matchPattern(excludedKey, key) !== undefined

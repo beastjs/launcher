@@ -70,7 +70,7 @@ describe("Plugin", () => {
       file,
       [
         "/**",
-        " * ```ts import.meta.vitest name=asserted",
+        " * ```ts import.meta.vitest name=asserted</script>",
         " * const result = 1; // => 1",
         " * [1, 2].forEach(record)",
         " * ```",
@@ -93,7 +93,8 @@ describe("Plugin", () => {
       if (typeof source !== "string") return assert.fail("expected collector source")
 
       assert.match(source, /import \{ test \} from "@effect\/doctest\/Runtime"/)
-      assert.match(source, /test\("asserted", \(\) => import\([^)]*\)\)/)
+      assert.notInclude(source, "</script>")
+      assert.include(source, "test(\"asserted\\u003c/script\\u003e\", () => import(")
 
       const snippetId = Protocol.snippetId(file, 0, "test")
       const resolvedSnippet = await resolveId.call(context, snippetId, undefined, {} as never)
