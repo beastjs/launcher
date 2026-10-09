@@ -3,7 +3,6 @@ import { useIconWorkspace } from '@/hooks/use-icon-workspace'
 import Button from '@/components/ui/Button.btsx'
 import Checkbox from '@/components/ui/checkbox.btsx'
 import ScrubField from '@/components/ui/scrubfield.btsx'
-import Icon from "../lib/icons/Icon.btsx";
 import type { SvgOptimizationResult } from '../lib/svg-optimizer.ts'
 import { recentCustomIcons } from '@/lib/custom-icon-set'
 
@@ -54,21 +53,19 @@ module
 
 component ActionsColumn
   props { pasting, paste, working, source, optimize, result, copy, copiedName, resultUrl, setSource, setPasteError, autoOptimize, error, pasteError, copyError }: ActionsColumnProps
-  div(className='flex flex-col gap-3')
-    Button(label="Paste SVG" pending={pasting} pendingLabel="Pasting…" disabled={pasting} onClick={() => void paste()})
-      Icon(name='paste')
-    Button(label="Optimize" pending={working} pendingLabel="Optimizing…" disabled={!source.trim() || working} onClick={optimize})
-      Icon(name='wrench')
-    div(className='grid grid-cols-3 gap-1')
-      Button(disabled={!result || working} onClick={() => { if (result) void copy(result.svg, result.svg) }} variant='ghost')
-        Icon(name={copiedName === result?.svg ? 'check-circle' : 'copy'})
-      if resultUrl && result && !working
-        Button(type="a" href={resultUrl} download="optimized.svg" variant="ghost")
-          Icon(name='download')
-      Button(onClick={() => { setSource(''); setPasteError(null) }} disabled={!source} variant="ghost")
-        Icon(name='clear')
-    p(className="mt-4 text-xs text-muted-foreground" role="status" aria-live="polite") #{working ? 'Optimizing SVG…' : result ? `${bytesLabel(result.originalBytes)} → ${bytesLabel(result.optimizedBytes)} ` : !autoOptimize && source.trim() ? 'Auto optimize is off.' : 'Ready to optimize'}
-    p(className="mt-4 text-xs text-muted-foreground" role="status" aria-live="polite") #{ result && `${Math.abs(result.savings).toFixed(1)}% ${result.savings >= 0 ? 'smaller' : 'larger'}`}
+  div(className="flex min-w-0 flex-col gap-3 sm:col-span-2 lg:col-span-1")
+    p(className="text-xs font-medium") Actions
+    div(className="grid grid-cols-2 gap-2 lg:grid-cols-1")
+      Button(label="Paste SVG" icon="paste" size="md" className="w-full" pending={pasting} pendingLabel="Pasting…" disabled={pasting} onClick={() => void paste()})
+      Button(label="Optimize" icon="wrench" size="md" className="w-full" pending={working} pendingLabel="Optimizing…" disabled={!source.trim() || working} onClick={optimize})
+    div(className="grid grid-cols-3 gap-2")
+      Button(disabled={!result || working} onClick={() => { if (result) void copy(result.svg, result.svg) }} icon={copiedName === result?.svg ? 'check-circle' : 'copy'} aria-label={copiedName === result?.svg ? 'Copied SVG' : 'Copy optimized SVG'} title="Copy optimized SVG" size="md" variant="ghost")
+      Button(type="a" href={resultUrl ?? ''} download="optimized.svg" disabled={!resultUrl || !result || working} icon="download" aria-label="Download optimized SVG" title="Download optimized SVG" size="md" variant="ghost")
+      Button(onClick={() => { setSource(''); setPasteError(null) }} disabled={!source} icon="clear" aria-label="Clear SVG" title="Clear SVG" size="md" variant="ghost")
+    div(className="space-y-1 border-t border-border/25 pt-3 text-xs leading-5 text-muted-foreground" role="status" aria-live="polite")
+      p #{working ? 'Optimizing SVG…' : result ? `${bytesLabel(result.originalBytes)} → ${bytesLabel(result.optimizedBytes)}` : !autoOptimize && source.trim() ? 'Auto optimize is off.' : 'Ready to optimize'}
+      if result
+        p #{`${Math.abs(result.savings).toFixed(1)}% ${result.savings >= 0 ? 'smaller' : 'larger'}`}
     if error
       p(className="mt-3 whitespace-pre-wrap break-words text-xs text-destructive" role="alert") #{error}
     if pasteError
@@ -85,7 +82,7 @@ module
 
 component OriginalColumn
   props { source, setSource, sourceUrl }: OriginalColumnProps
-  div(className="min-w-0 col-span-3")
+  div(className="min-w-0")
     div(className="mb-2 flex items-center justify-between gap-3")
       label(for="paste-svg-source" className="text-xs font-medium") Original SVG
     textarea#paste-svg-source(value={source} onInput={(event: Event) => setSource((event.currentTarget as HTMLTextAreaElement).value)} placeholder={'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">…</svg>'} spellCheck={false} rows={9} className="w-full resize-y rounded-xl border border-border/25 bg-background p-3 font-mono text-xs leading-5 outline-none focus:ring-2 focus:ring-ring")
@@ -103,7 +100,7 @@ module
 
 component OptimizedColumn
   props { result, resultUrl }: OptimizedColumnProps
-  div(className="min-w-0 col-span-3")
+  div(className="min-w-0")
     label(for="paste-svg-result" className="mb-2 block text-xs font-medium") Optimized SVG
     textarea#paste-svg-result(value={result?.svg ?? ''} readOnly={true} spellCheck={false} rows={9} placeholder="Optimized markup will appear here" className="w-full resize-y rounded-xl border border-border/25 bg-background p-3 font-mono text-xs leading-5 outline-none focus:ring-2 focus:ring-ring")
     div(className="mt-3 grid h-32 place-items-center rounded-xl dark:bg-muted-foreground p-4")
@@ -119,7 +116,7 @@ setup
 
 section(aria-labelledby="paste-svg-heading" className="mb-10 rounded-2xl border border-border/25 bg-card p-5 sm:p-6")
   HeaderSection(options={options} setOptions={setOptions} autoOptimize={autoOptimize} setAutoOptimize={setAutoOptimize} setManualRequest={setManualRequest})
-  div(className="grid gap-5 lg:grid-cols-7 border-t border-border/50 py-4")
+  div(className="grid grid-cols-1 gap-5 border-t border-border/50 py-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_11rem]")
     OriginalColumn(source={source} setSource={setSource} sourceUrl={sourceUrl})
     OptimizedColumn(result={result} resultUrl={resultUrl})
     ActionsColumn(pasting={pasting} paste={paste} working={working} source={source} optimize={optimize} result={result} copy={copy} copiedName={copiedName} resultUrl={resultUrl} setSource={setSource} setPasteError={setPasteError} autoOptimize={autoOptimize} error={error} pasteError={pasteError} copyError={copyError})

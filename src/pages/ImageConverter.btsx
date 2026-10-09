@@ -4,6 +4,8 @@ import Button from '@/components/ui/Button.btsx'
 import { Icon } from '@/lib/icons'
 import { useImageConverter, type ConversionOptions, type ConversionResult } from '@/hooks/use-image-converter'
 import { useBlobUrl } from '@/hooks/use-blob-url'
+import Scrubfield from "../components/ui/scrubfield.btsx";
+import Checkbox from "../components/ui/checkbox.btsx";
 
 module
   const formats = [{ value: 'webp', label: 'WebP', description: 'Small files for the web' }, { value: 'jpeg', label: 'JPEG', description: 'Widely compatible' }, { value: 'avif', label: 'AVIF', description: 'When supported by your browser' }] as const
@@ -144,25 +146,23 @@ setup
   }
   useEffect(() => () => { generation.current += 1 }, [])
 
-section(className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-12")
-  Link(to="/converters" className="mb-6 inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring")
+section(className="mx-auto w-full max-w-7xl md:max-w-full p-5")
+  Link(to="/converters" className="mb-4 inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring")
     Icon(name="arrow-left" size={14})
     span All converters
-  header(className="mb-8")
-    div(className="mb-3 flex items-center gap-2 font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground")
-      Icon(name="mechanics" size={14})
-      span Image tools
-    h1(className="text-3xl font-semibold tracking-tight") Image Converter
-    p(className="mt-3 text-sm leading-6 text-muted-foreground") Convert one image or a whole batch. Your files stay on this device.
+  header(className="mb-4")
+    div(className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground")
+    h1(className="text-xl font-semibold tracking-tight") Image Converter
   div(className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]")
     div(className="min-w-0 space-y-5")
       div(className={"relative rounded-2xl border border-dashed p-8 text-center transition-colors " + (dragging ? 'border-accent bg-accent/10' : 'border-border/40 bg-card')} onDragOver={(event: DragEvent) => { event.preventDefault(); if (!running) setDragging(true) }} onDragLeave={() => setDragging(false)} onDrop={onDrop})
         div(className="mx-auto mb-4 grid size-12 place-items-center rounded-xl bg-secondary")
-          Icon(name="new-folder" size={24})
+          Icon(name="image" size={28})
         h2(className="text-sm font-medium") Drop images here
         p(className="mt-2 text-xs leading-5 text-muted-foreground") Select multiple PNG, JPEG, WebP, or other images your browser can open.
         input(ref={inputRef} type="file" multiple accept="image/*" aria-label="Choose images" className="sr-only" disabled={running} onChange={onFileChange})
-        Button(label={entries.length ? 'Add images' : 'Choose images'} onClick={() => inputRef.current?.click()} disabled={running} className="mt-5")
+        Button(id='browse-files' onClick={() => inputRef.current?.click()} disabled={running} className="absolute top-3 right-3" variant='ghost')
+          Icon(name='new-folder')
       if entries.length
         div(className="flex items-center justify-between gap-3")
           p(className="text-xs text-muted-foreground") #{`${entries.length} ${entries.length === 1 ? 'image' : 'images'} · ${formatSize(totalSize)}`}
@@ -180,15 +180,12 @@ section(className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-12")
             div
               span(className="block text-sm font-medium") #{option.label}
               span(className="mt-0.5 block text-[11px] text-muted-foreground") #{option.description}
+
       div(className="mt-6")
-        label(for="image-quality" className="flex items-center justify-between text-xs text-muted-foreground")
-          span Quality
-          output(for="image-quality" className="font-mono text-foreground") #{quality + '%'}
-        input#image-quality(type="range" min="1" max="100" step="1" value={quality} onInput={onQualityChange} disabled={running} className="mt-4 w-full accent-foreground")
+        Scrubfield(label="Image Quality" accent='#f52240' value={quality} min={50} max={100} step={1} fineMultiplier={1} size="md" showDirty={true} chipColor="var(--surface)" onChange={(value: number) => setQuality(current => (Math.round(value) ))} className='w-full')
         p(className="mt-2 text-[11px] leading-5 text-muted-foreground") Higher quality usually means a larger file.
-      label(className="mt-6 flex cursor-pointer items-center gap-3 text-sm")
-        input(type="checkbox" checked={grayscale} disabled={running} onChange={(event: Event) => { setGrayscale((event.currentTarget as HTMLInputElement).checked); resetResults() }} className="size-4 accent-foreground")
-        span Grayscale
+      div(className="mt-6 flex cursor-pointer items-center gap-3 text-sm")
+        Checkbox(checked={grayscale} boxSize={16} onChange={(v: boolean) => setGrayscale(v)} label='Grayscale' strike='none')
       fieldset(className="mt-6" disabled={running})
         legend(className="text-xs font-medium") Dimension constraints
         div(className="mt-3 grid grid-cols-2 gap-3")
