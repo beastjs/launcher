@@ -67,7 +67,7 @@ module
     };
   };
 
-props {id, checked, checkColor='var(--foreground)', defaultChecked=false, className, doneOpacity=0.42, strike='left', strikeLag=0.12, onChange, color='var(--foreground)', fillColor='var(--accent)', bounce=0.02, boxSize=24, boxRadius=6, fontSize=14, disabled=false, ariaLabel, label}: CheckboxProps
+props {id, checked, checkColor='#FFFFFF', defaultChecked=false, className, doneOpacity=0.42, strike='left', strikeLag=0.12, onChange, color='var(--foreground)', fillColor='var(--accent)', bounce=0.02, boxSize=24, boxRadius=6, fontSize=14, disabled=false, ariaLabel, label}: CheckboxProps
 setup
   const controlled = checked !== undefined;
   const [inner, setInner] = useState(defaultChecked);

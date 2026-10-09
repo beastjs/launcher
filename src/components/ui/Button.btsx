@@ -75,9 +75,9 @@ module
   const BUTTON_SIZE_CLASSES = {
     icon: "size-6",
     'icon-lg': "h-8 w-9",
-    sm: "h-[32px] rounded-full px-1",
-    md: "h-[36px] rounded-lg px-1.5",
-    lg: "h-[40px] rounded-xl px-2",
+    sm: "h-[32px] rounded-full px-1.5",
+    md: "h-[36px] rounded-lg px-2.5",
+    lg: "h-[40px] rounded-xl px-4",
   } as const satisfies Record<ButtonSize, string>
 
   const BUTTON_ICON_SIZES = {

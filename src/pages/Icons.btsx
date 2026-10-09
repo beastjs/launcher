@@ -48,9 +48,6 @@ component IconSetCard
       span #{metadata ? `${metadata.total.toLocaleString()} icons` : 'Loading collection…'}
       if metadata?.license?.url
         a(href={metadata.license.url} target="_blank" rel="noopener noreferrer" className="hover:text-foreground hover:underline") #{metadata.license.title}
-    Link(to="/icons/$iconSetId" params={{ iconSetId: id }} onMouseEnter={prefetch} onFocus={prefetch} className="mt-5 inline-flex items-center justify-between text-xs font-medium hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring")
-      span Browse icons
-      Icon(name="arrow-right" size={16})
 
 props {}:{}
 setup

@@ -147,10 +147,10 @@ section(aria-labelledby="paste-svg-heading" className="mb-10 rounded-2xl border 
     if recentIcons.length
       ul(className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5 xl:grid-cols-10")
         each item in recentIcons key `${item.listName}/${item.icon.name}`
-          li(className="min-w-0 rounded-lg border border-border/25 p-2" title={`${item.icon.name} · ${item.listName}`})
+          li(className="min-w-0 rounded-lg border border-border/25 p-1" title={`${item.icon.name} · ${item.listName}`})
             div(className="grid h-14 place-items-center rounded-md bg-white p-2")
               img(src={`data:image/svg+xml,${encodeURIComponent(item.icon.svg)}`} alt="" className="size-8 object-contain")
-            p(className="mt-2 truncate text-xs font-medium") #{item.icon.name}
-            p(className="mt-1 truncate text-[10px] text-muted-foreground") #{item.listName}
+            p(className="mt-2 truncate ps-1 text-xs font-medium") #{item.icon.name}
+            p(className="truncate ps-1 text-[10px] text-muted-foreground") #{item.listName}
     else
       p(className="mt-3 text-xs text-muted-foreground") Add an icon to a list to see your recent additions here.

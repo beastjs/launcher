@@ -50,16 +50,16 @@ section(aria-labelledby="custom-icon-set-heading" className="rounded-2xl border 
   if !iconSet.icons.length
     p(className="mt-3 rounded-xl border border-dashed border-border/25 p-5 text-sm text-muted-foreground") Add an SVG from the Optimizer tab or pick favorites above to fill this list.
   else
-    ul(className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3")
+    ul(className="mt-3 grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5")
       each icon in iconSet.icons key icon.name
-        li(className="flex min-w-0 items-center gap-3 rounded-xl border border-border/25 bg-background p-3")
-          div(className="grid size-12 shrink-0 place-items-center rounded-lg bg-[conic-gradient(#f1f1f1_25%,#fff_0_50%,#f1f1f1_0_75%,#fff_0)] bg-[size:12px_12px]")
-            img(src={`data:image/svg+xml,${encodeURIComponent(icon.svg)}`} alt={`${icon.name} preview`} className="size-9 object-contain")
-          div(className="min-w-0 flex-1")
+        li(className="flex min-w-0 items-center gap-1 rounded-xl border border-border/25 bg-background p-1.5 relative")
+          div(className="grid size-10 shrink-0 place-items-center rounded-lg bg-[conic-gradient(#f1f1f1_25%,#fff_0_50%,#f1f1f1_0_75%,#fff_0)] bg-[size:12px_12px]")
+            img(src={`data:image/svg+xml,${encodeURIComponent(icon.svg)}`} alt={`${icon.name} preview`} className="size-5 object-contain")
+          div(className="min-w-0 flex-1 ml-1")
             p(className="truncate text-xs font-medium") #{icon.name}
             p(className="mt-1 truncate font-mono text-[10px] text-muted-foreground") #{icon.viewBox}
-          Button(label="Edit" aria-label={`Edit ${icon.name}`} onClick={() => editIcon(icon)} variant="ghost")
-          Button(icon="close" size="icon" aria-label={`Remove ${icon.name}`} onClick={() => removeIcon(icon.name)} variant="ghost")
+          Button(label="Edit" size='sm' aria-label={`Edit ${icon.name}`} onClick={() => editIcon(icon)} variant="ghost")
+          Button(icon="close" size="icon" aria-label={`Remove ${icon.name}`} onClick={() => removeIcon(icon.name)} variant="ghost" className='absolute -top-2 -right-2')
   div(className="mt-5 flex flex-wrap gap-3")
     Button(label="Download SVG folder (.zip)" disabled={!iconSet.icons.length} onClick={() => exportSet('svg')} variant="primary")
     Button(label="Download symbols (.ts)" disabled={!iconSet.icons.length} onClick={() => exportSet('ts')})

@@ -23,7 +23,7 @@ module
     label?: string
   }
 
-  const baseClassName = 'relative inline-flex items-center justify-self-end gap-5 md:gap-7 lg:gap-8 max-[1050px]:col-span-full max-[1050px]:row-start-2 max-[1050px]:justify-self-center border-b border-sidebar-border dark:border-surface/33 min-w-xl'
+  const baseClassName = 'relative inline-flex items-center justify-self-end gap-5 md:gap-7 lg:gap-8 border-b border-sidebar-border dark:border-surface/33 min-w-lg'
 
 component TabAnchor
   props { selected, children, ...anchorProps }: JSX.IntrinsicElements['a'] & { selected: boolean }
@@ -81,7 +81,7 @@ nav(
       ~ selected={activeId === item.id}
       ~ aria-label={item.label}
       ~ activeProps={{}}
-      ~ className={cn('relative z-10 flex items-center justify-center gap-2.5 cursor-pointer font-sans hover:text-foreground px-4 sm:ps-3 sm:pe-5 md:px-3 py-2.5 capitalize whitespace-nowrap rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring', items.length >= 3 && 'min-w-0 flex-1', activeId === item.id ? 'text-foreground' : 'text-muted-foreground')}
+      ~ className={cn('relative z-10 flex items-center justify-center gap-2.5 cursor-pointer font-sans hover:text-foreground px-4 sm:ps-3 sm:pe-5 md:px-3 py-2.5 capitalize whitespace-nowrap rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring', items.length >= 5 && 'min-w-0 flex-1', activeId === item.id ? 'text-foreground' : 'text-muted-foreground')}
       ~ )
       Icon(name={item.icon} className='md:size-4 size-5 md:opacity-80')
       span(className='hidden lg:inline font-sans font-medium text-sm -tracking-[0.014em]') #{item.label}
