@@ -6,7 +6,7 @@ import Sidebar from "@/components/Sidebar.btsx";
 import Branched from "../components/Branched.btsx";
 
 module
-  const SEPARATOR_CLASS = "relative w-[0.5px] shrink-0 bg-border/40 outline-none transition-colors after:absolute after:inset-y-0 after:-inset-x-1.5 after:content-[''] hover:bg-focus data-[separator=active]:bg-focus _data-[separator=focus]:bg-focus/60"
+  const SEPARATOR_CLASS = "relative w-[0.5px] shrink-0 bg-surface dark:bg-surface/33 outline-none transition-colors after:absolute after:inset-y-0 after:-inset-x-1.5 after:content-[''] hover:bg-focus data-[separator=active]:bg-focus _data-[separator=focus]:bg-focus/60"
 
 props {}:{}
 setup

@@ -18,7 +18,7 @@ export type NavGroup = {
 }
 export const navGroups: NavGroup[] = [
   {
-    title: 'Workspace',
+    title: 'TOOLBOX',
     items: [
       {
         href: '/',

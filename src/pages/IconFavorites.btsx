@@ -1,9 +1,7 @@
 import { useState } from 'octane'
-import { Link } from '@octanejs/tanstack-router'
 import { useIconFavorites } from '@/hooks/use-icon-favorites'
 import { useSearchShortcut } from '@/hooks/use-search-shortcut'
 import IconGrid from '@/components/IconGrid.btsx'
-import { Icon } from '@/lib/icons'
 
 props {}:{}
 setup
@@ -14,10 +12,7 @@ setup
   const term = query.trim().toLowerCase()
   const icons = favorites.filter(icon => `${icon.name} ${icon.sourceSetId}`.includes(term))
 
-section(className="mx-auto w-full max-w-7xl px-5 py-8 sm:px-8 sm:py-12")
-  Link(to="/icons" className="mb-6 inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground")
-    Icon(name="arrow-left" size={14})
-    span All icon sets
+section
   header
     h1(className="text-3xl font-semibold tracking-tight") Favorite Icons
     p(className="mt-3 text-sm leading-6 text-muted-foreground") Your saved icons from every collection, stored in this browser.

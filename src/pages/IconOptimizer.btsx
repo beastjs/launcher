@@ -1,0 +1,4 @@
+import PasteSvgOptimizer from '@/components/PasteSvgOptimizer.btsx'
+
+props {}:{}
+PasteSvgOptimizer

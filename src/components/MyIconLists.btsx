@@ -1,0 +1,65 @@
+import Button from '@/components/ui/Button.btsx'
+import { iconKey } from '@/lib/icon-favorites'
+import { getSvgElementSnippet } from '@/lib/iconify'
+import { Link } from '@octanejs/tanstack-router'
+import { useIconWorkspace } from '@/hooks/use-icon-workspace'
+
+props {}:{}
+setup
+  const { iconLists, selectList, newListName, setNewListName, setSetError, createList, favorites, favoriteQuery, setFavoriteQuery, visibleFavorites, selectedFavorites, importingFavorites, togglePickedFavorite, pickedFavorites, addFavorites, setError, storageError, setMessage, iconSet, editIcon, removeIcon, exportSet } = useIconWorkspace()
+
+section(aria-labelledby="custom-icon-set-heading" className="rounded-2xl border border-border/25 bg-card p-5 sm:p-6")
+  header(className="mb-4")
+    h1#custom-icon-set-heading(className="text-lg font-semibold") Icon Lists
+  div(className="flex flex-wrap items-end gap-3")
+    label(className="min-w-0 flex-1 text-xs text-muted-foreground")
+      span List Name
+      select(value={iconLists.selected} onChange={(event: Event) => selectList((event.currentTarget as HTMLSelectElement).value)} className="mt-2 w-full rounded-lg border border-border/25 bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring")
+        each list in iconLists.lists key list.name
+          option(value={list.name}) #{`${list.name} (${list.icons.length})`}
+    label(className="min-w-0 flex-1 text-xs text-muted-foreground")
+      span New list name
+      input(type="text" value={newListName} placeholder="my-new-icons" onInput={(event: Event) => { setNewListName((event.currentTarget as HTMLInputElement).value); setSetError(null) }} className="mt-2 w-full rounded-lg border border-border/25 bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring")
+    Button(label="Create list" disabled={!newListName.trim()} onClick={createList})
+  div(className="hidden mt-5 rounded-xl border border-border/25 p-4")
+    h4(className="text-sm font-medium") Pick from favorites
+    p(className="mt-2 text-xs leading-5 text-muted-foreground") Select favorites to add to the list chosen above. Names include the collection to avoid collisions. Auto optimize uses your Optimizer tab settings; when off, the original SVG is kept.
+    if !favorites.length
+      p(className="mt-3 text-xs text-muted-foreground") No favorites yet. Star icons in a collection to see them here.
+    else
+      div
+        label(className="mt-3 block text-xs text-muted-foreground")
+          span Search saved favorites
+          input(type="search" value={favoriteQuery} placeholder="Search by icon or collection…" onInput={(event: Event) => setFavoriteQuery((event.currentTarget as HTMLInputElement).value)} className="mt-2 w-full rounded-lg border border-border/25 bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring")
+        div(className="mt-3 grid max-h-64 gap-2 overflow-y-auto sm:grid-cols-2 xl:grid-cols-3")
+          each icon in visibleFavorites key iconKey(icon)
+            label(className="flex min-w-0 items-center gap-3 rounded-lg bg-background p-3 text-xs")
+              input(type="checkbox" checked={selectedFavorites.includes(iconKey(icon))} disabled={importingFavorites} onChange={() => togglePickedFavorite(iconKey(icon))} className="accent-foreground")
+              img(src={`data:image/svg+xml,${encodeURIComponent(getSvgElementSnippet(icon))}`} alt="" className="size-7 shrink-0")
+              span(className="truncate" title={iconKey(icon)}) #{iconKey(icon)}
+        if !visibleFavorites.length
+          p(className="mt-3 text-xs text-muted-foreground") No favorites match your search.
+        Button(label={`Add selected favorites (${pickedFavorites.length})`} pending={importingFavorites} pendingLabel="Adding favorites…" disabled={!pickedFavorites.length || importingFavorites} onClick={() => void addFavorites()} className="mt-3")
+  if setError
+    p(className="mt-3 text-xs text-destructive" role="alert") #{setError}
+  if storageError
+    p(className="mt-3 text-xs text-destructive" role="alert") #{storageError}
+  if setMessage
+    p(className="mt-3 text-xs text-muted-foreground" role="status") #{setMessage}
+  p(className="mt-5 text-xs text-muted-foreground") #{`${iconSet.icons.length} ${iconSet.icons.length === 1 ? 'icon' : 'icons'} in ${iconSet.name}`}
+  if !iconSet.icons.length
+    p(className="mt-3 rounded-xl border border-dashed border-border/25 p-5 text-sm text-muted-foreground") Add an SVG from the Optimizer tab or pick favorites above to fill this list.
+  else
+    ul(className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3")
+      each icon in iconSet.icons key icon.name
+        li(className="flex min-w-0 items-center gap-3 rounded-xl border border-border/25 bg-background p-3")
+          div(className="grid size-12 shrink-0 place-items-center rounded-lg bg-[conic-gradient(#f1f1f1_25%,#fff_0_50%,#f1f1f1_0_75%,#fff_0)] bg-[size:12px_12px]")
+            img(src={`data:image/svg+xml,${encodeURIComponent(icon.svg)}`} alt={`${icon.name} preview`} className="size-9 object-contain")
+          div(className="min-w-0 flex-1")
+            p(className="truncate text-xs font-medium") #{icon.name}
+            p(className="mt-1 truncate font-mono text-[10px] text-muted-foreground") #{icon.viewBox}
+          Button(label="Edit" aria-label={`Edit ${icon.name}`} onClick={() => editIcon(icon)} variant="ghost")
+          Button(icon="close" size="icon" aria-label={`Remove ${icon.name}`} onClick={() => removeIcon(icon.name)} variant="ghost")
+  div(className="mt-5 flex flex-wrap gap-3")
+    Button(label="Download SVG folder (.zip)" disabled={!iconSet.icons.length} onClick={() => exportSet('svg')} variant="primary")
+    Button(label="Download symbols (.ts)" disabled={!iconSet.icons.length} onClick={() => exportSet('ts')})

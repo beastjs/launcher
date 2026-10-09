@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test'
 import { strFromU8, unzipSync } from 'fflate'
-import { iconSetZip, iconSetTypeScript, readCustomIconSet, readCustomIconLists, createCustomIconList, type CustomIconSet } from '../src/lib/custom-icon-set'
+import { iconSetZip, iconSetTypeScript, readCustomIconSet, readCustomIconLists, createCustomIconList, recentCustomIcons, type CustomIconSet } from '../src/lib/custom-icon-set'
 
 const set: CustomIconSet = { name: 'my-icons', icons: [
   { name: 'search', svg: '<svg viewBox="0 0 24 24"><path d="M0 0h24"/></svg>', symbol: '<path d="M0 0h24"/>', viewBox: '0 0 24 24' },
@@ -53,4 +53,18 @@ test('list storage repairs invalid selections and ignores duplicate lists', () =
   const restored = readCustomIconLists(JSON.stringify({ lists: [set, set], selected: 'missing' }))
   expect(restored).toEqual({ lists: [set], selected: set.name })
   expect(readCustomIconLists('broken', JSON.stringify(set)).lists).toEqual([set])
+})
+
+test('recent additions span lists, survive storage, and stop at ten without changing list order', () => {
+  const icons = Array.from({ length: 12 }, (_, index) => ({ ...set.icons[0], name: `icon-${index}`, addedAt: index + 1 }))
+  const current = { lists: [{ name: 'first', icons: icons.filter((_, index) => index % 2 === 0) }, { name: 'second', icons: icons.filter((_, index) => index % 2 !== 0) }], selected: 'first' }
+  const restored = readCustomIconLists(JSON.stringify(current))
+  expect(recentCustomIcons(restored).map(item => item.icon.name)).toEqual(Array.from({ length: 10 }, (_, index) => `icon-${11 - index}`))
+  expect(recentCustomIcons(restored)[0].listName).toBe('second')
+  expect(restored).toEqual(current)
+})
+
+test('recent additions still display older icons without timestamps', () => {
+  expect(recentCustomIcons({ lists: [set], selected: set.name }).map(item => item.icon.name)).toEqual(['arrow-left', 'search'])
+  expect(recentCustomIcons({ lists: [{ name: 'empty', icons: [] }], selected: 'empty' })).toEqual([])
 })

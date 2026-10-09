@@ -4,6 +4,8 @@ All notable changes to `launcher` will be recorded here.
 
 ## [Unreleased]
 
+- Migrate development and production builds from Vite to Rspack, preserving Beast tooling, Tailwind styles, module workers, static assets, and the vendored-import guard.
+
 - Make the Effect Gym entrance a training module cover, with Start training opening a dedicated lessons route.
 
 - Add Raw and Presentation output tabs to Effect labs with result cards and execution timelines.

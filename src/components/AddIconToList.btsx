@@ -57,4 +57,4 @@ section(aria-label="Add icon to list" className="mt-4 rounded-xl border border-b
   if message
     p(role="status" className="mt-3 text-xs text-muted-foreground") #{message}
   if showManageLink
-    Link(to="/icons" className="mt-3 inline-block text-xs text-muted-foreground hover:text-foreground hover:underline") Manage and download lists
+    Link(to="/icons/lists" className="mt-3 inline-block text-xs text-muted-foreground hover:text-foreground hover:underline") Manage and download lists

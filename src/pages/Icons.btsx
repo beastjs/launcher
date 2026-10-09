@@ -4,11 +4,9 @@ import { fetchAndCacheMetadata, fetchCollections, prefetchIconSet } from '@/hook
 import { useIconMeta } from '@/hooks/use-icon-meta'
 import { validIconSetId, type IconCollections } from '@/lib/iconify'
 import IconShell from '@/components/IconShell.btsx'
-import PasteSvgOptimizer from '@/components/PasteSvgOptimizer.btsx'
 import Button from '@/components/ui/Button.btsx'
 import HyperList from '@/components/ui/HyperList.btsx'
 import { Icon } from '@/lib/icons'
-import { useIconFavorites } from '@/hooks/use-icon-favorites'
 import { useSearchShortcut } from '@/hooks/use-search-shortcut'
 
 module
@@ -57,7 +55,6 @@ component IconSetCard
 props {}:{}
 setup
   const [ids, setIds] = useState<string[]>(loadSets)
-  const { favorites } = useIconFavorites()
   const [query, setQuery] = useState('')
   const [collections, setCollections] = useState<IconCollections>({})
   const [adding, setAdding] = useState(false)
@@ -104,16 +101,7 @@ setup
   }, [])
   useEffect(() => { try { localStorage.setItem(storageKey, JSON.stringify(ids)) } catch {} }, [ids])
 
-section(className="mx-auto w-full max-w-7xl space-y-6 p-5 p-6")
-
-
-  Link(to="/icons/favorites"
-    ~ class="flex box-border relative w-fit h-8 px-3 overflow-x-hidden overflow-y-hidden items-center gap-y-[6px] gap-x-[6px] bg-[#262626] text-[12px] leading-[11px] rounded-sm"
-    ~ )
-    span(className="relative h-[11px] font-sans font-medium text-white") Favorites
-    span(class="text-white ") #{favorites.length}
-
-  PasteSvgOptimizer
+section
   div(className="mb-8 max-w-xl")
     label(for="icon-set-id" className="mb-2 block text-xs text-muted-foreground") Add an icon set
     div(className="flex items-start gap-2")

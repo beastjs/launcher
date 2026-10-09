@@ -5,6 +5,8 @@ const routeLabels: Record<string, string> = {
   '/converters/image': 'Image Converter',
   '/icons': 'Icons',
   '/icons/favorites': 'Favorites',
+  '/icons/optimizer': 'Optimizer',
+  '/icons/lists': 'Icon Lists',
   '/gym': 'Gym',
   '/gym/effect-js': 'Effect',
   '/gym/effect-js/lessons': 'Lessons',

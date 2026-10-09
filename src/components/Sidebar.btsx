@@ -23,8 +23,8 @@ module
 
   const SIDEBAR_CLASS = "hidden md:flex flex-col w-full h-full min-h-0 bg-surface dark:bg-surface/33 overflow-hidden"
   const SIDEBAR_ITEM_CLASS = "relative z-10 flex w-full items-center gap-1.75 rounded-[10px] border py-1.75 pl-1.75 text-left focus-visible:ring-2 focus-visible:ring-focus"
-  const SIDEBAR_ITEM_SELECTED_CLASS = "bg-[linear-gradient(in_oklab_180deg,oklab(95.2%_0_0)_0%,oklab(91.3%_0_0)_100%)] shadow-[inset_0_1px_0_#FFFFFF54,0_2.5px_3.5px_-1px_#00000026,0_0_0_1px_#D4D4D4] bg-origin-border dark:bg-[linear-gradient(in_oklab_180deg,oklab(32%_0_0)_0%,oklab(25%_0_0)_100%)] dark:shadow-[inset_0_1px_0_#F0F0F010,0_3px_3px_-1px_#00000026,0_0_0_1px_#04040460] border-border/0"
-  const SIDEBAR_ITEM_SELECTED_CLASS_DARK = "_bg-[linear-gradient(in_oklab_180deg,oklab(95.2%_0_0)_0%,oklab(91.3%_0_0)_100%)] _shadow-[inset_0_1px_0_#FFFFFF54,0_2.5px_3.5px_-1px_#00000026,0_0_0_1px_#D4D4D4] bg-origin-border bg-[linear-gradient(in_oklab_180deg,oklab(32%_0_0)_0%,oklab(25%_0_0)_100%)] dark:shadow-[inset_0_1px_0_#F0F0F005,0_3px_3px_-1px_#00000006,0_0_0_1px_#04040410] border-border/0"
+  const SIDEBAR_ITEM_SELECTED_CLASS = "bg-[linear-gradient(in_oklab_180deg,oklab(95.2%_0_0)_0%,oklab(91.3%_0_0)_100%)] shadow-[inset_0_1px_0_#FFFFFF54,0_2.5px_3.5px_-1px_#00000026,0_0_0_1px_#D4D4D4] bg-origin-border dark:bg-[linear-gradient(in_oklab_180deg,oklab(32%_0_0)_0%,oklab(25%_0_0)_100%)] dark:shadow-[inset_0_1px_0_#F0F0F010,0_3px_3px_-0.5px_#00000026,0_0_0_1px_#04040460] border-border/0"
+  const SIDEBAR_ITEM_SELECTED_CLASS_DARK = "_bg-[linear-gradient(in_oklab_180deg,oklab(95.2%_0_0)_0%,oklab(91.3%_0_0)_100%)] _shadow-[inset_0_1px_0_#FFFFFF54,0_2.5px_3.5px_-1px_#00000026,0_0_0_1px_#D4D4D4] bg-origin-border bg-[linear-gradient(in_oklab_180deg,oklab(32%_0_0)_0%,oklab(25%_0_0)_100%)] dark:shadow-[inset_0_1px_0_#F0F0F005,0_3px_3px_-0.5px_#00000006,0_0_0_1px_#04040410] border-border/0"
   const SIDEBAR_ITEM_DEFAULT_CLASS = "border-transparent bg-transparent"
   const SIDEBAR_ICON_CONTAINER_CLASS = "flex size-7.5 shrink-0 items-center justify-center rounded-[8px] bg-transparent"
   const SIDEBAR_ICON_SELECTED_CONTAINER_CLASS = "flex size-7.5 shrink-0 items-center justify-center rounded-[8px] light:bg-background"
@@ -152,8 +152,8 @@ aside(className={SIDEBAR_CLASS} data-compact={isCompact || undefined})
     button(className={cn('h-[16px] w-[19px] rounded-[4px] bg-muted-foreground flex items-center px-0.75 py-0.75 relative transition-all duration-180 active:scale-97 active:bg-foreground group active:skew-2', {'active:-skew-3': isCompact})} onClick={toggleSidebar})
       div(className={cn('h-[10px] w-[6.25px] rounded-[2.5px] bg-background absolute transition-all duration-240 ease-out group-active:scale-102 active:shadow-1px', {'translate-x-[6.5px] group-active:scale-85': !isCompact})})
   SidebarNavTooltips(path={path} isCompact={isCompact} className="mt-0 h-auto min-h-0 flex-1 overflow-y-auto overflow-x-hidden")
-  div(className="h-10 shrink-0 bg-sidebar")
-    div(className="flex items-center h-10 gap-2 px-2-xs")
+  div(className="h-12 shrink-0")
+    div(className="flex items-center h-12 gap-2 px-2-xs")
       div(className="flex-1 min-w-0")
         div(className={cn("text-xs font-medium text-foreground leading-none px-4 text-left", {'text-center': isCompact})})
           ThemeToggle

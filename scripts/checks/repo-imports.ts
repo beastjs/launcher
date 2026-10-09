@@ -2,7 +2,7 @@ import { existsSync, readFileSync, realpathSync, readdirSync } from 'node:fs'
 import { dirname, isAbsolute, relative, resolve } from 'node:path'
 import ts from 'typescript'
 import { compileBeast } from 'beast-tsrx'
-import type { Plugin } from 'vite'
+import type { RspackPluginInstance } from '@rspack/core'
 
 const root = resolve(import.meta.dirname, '../..')
 const repos = resolve(root, 'repos')
@@ -59,20 +59,29 @@ export function checkRepoImports(): void {
         failures.push(`${relative(root, path)}: ${specifier}`)
     }
   }
-  for (const entry of ['src', 'scripts', 'tests', 'vite.config.ts']) scan(resolve(root, entry))
+  for (const entry of ['src', 'scripts', 'tests', 'rspack.config.ts', 'postcss.config.mjs']) scan(resolve(root, entry))
   if (failures.length) throw new Error(`Vendored repositories are read-only references; import installed packages instead:\n${failures.join('\n')}`)
 }
 
-export function repoImportGuard(): Plugin {
+export function repoImportGuard(): RspackPluginInstance {
+  const name = 'launcher:repo-import-guard'
   return {
-    name: 'launcher:repo-import-guard',
-    enforce: 'pre',
-    buildStart() { checkRepoImports() },
-    async resolveId(source, importer, options) {
-      const result = await this.resolve(source, importer, { ...options, skipSelf: true })
-      if (result && isAbsolute(result.id) && isRepoPath(result.id))
-        this.error(`Cannot import ${source}: repos/ is reference-only. Import an installed package instead.`)
-      return result
+    apply(compiler) {
+      compiler.hooks.thisCompilation.tap(name, compilation => {
+        try {
+          checkRepoImports()
+        } catch (error) {
+          // Report a build error while keeping watch mode able to recover.
+          compilation.errors.push(error instanceof Error ? error : new Error(String(error)))
+        }
+      })
+      compiler.hooks.normalModuleFactory.tap(name, factory => {
+        factory.hooks.afterResolve.tap(name, data => {
+          const resource = data.createData?.resource
+          if (resource && isRepoPath(resource))
+            throw new Error(`Cannot import ${data.request}: repos/ is reference-only. Import an installed package instead.`)
+        })
+      })
     }
   }
 }

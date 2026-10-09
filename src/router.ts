@@ -14,16 +14,19 @@ const homeRoute = createRoute({
 })
 const convertersRoute = createRoute({ getParentRoute: () => rootRoute, path: '/converters', component: lazyRouteComponent(() => import('./pages/Converters.btsx')) })
 const imageConverterRoute = createRoute({ getParentRoute: () => rootRoute, path: '/converters/image', component: lazyRouteComponent(() => import('./pages/ImageConverter.btsx')) })
-const iconsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/icons', component: lazyRouteComponent(() => import('./pages/Icons.btsx')) })
-const iconFavoritesRoute = createRoute({ getParentRoute: () => rootRoute, path: '/icons/favorites', component: lazyRouteComponent(() => import('./pages/IconFavorites.btsx')) })
-const iconSetRoute = createRoute({ getParentRoute: () => rootRoute, path: '/icons/$iconSetId', component: lazyRouteComponent(() => import('./pages/IconSet.btsx')) })
-const iconDetailRoute = createRoute({ getParentRoute: () => rootRoute, path: '/icons/$iconSetId/$iconName', component: lazyRouteComponent(() => import('./pages/IconDetail.btsx')) })
+const iconsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/icons', component: lazyRouteComponent(() => import('./layouts/IconsLayout.btsx')) })
+const iconSetsRoute = createRoute({ getParentRoute: () => iconsRoute, path: '/', component: lazyRouteComponent(() => import('./pages/Icons.btsx')) })
+const iconOptimizerRoute = createRoute({ getParentRoute: () => iconsRoute, path: 'optimizer', component: lazyRouteComponent(() => import('./pages/IconOptimizer.btsx')) })
+const iconListsRoute = createRoute({ getParentRoute: () => iconsRoute, path: 'lists', component: lazyRouteComponent(() => import('./pages/IconLists.btsx')) })
+const iconFavoritesRoute = createRoute({ getParentRoute: () => iconsRoute, path: 'favorites', component: lazyRouteComponent(() => import('./pages/IconFavorites.btsx')) })
+const iconSetRoute = createRoute({ getParentRoute: () => iconsRoute, path: '$iconSetId', component: lazyRouteComponent(() => import('./pages/IconSet.btsx')) })
+const iconDetailRoute = createRoute({ getParentRoute: () => iconsRoute, path: '$iconSetId/$iconName', component: lazyRouteComponent(() => import('./pages/IconDetail.btsx')) })
 const gymRoute = createRoute({ getParentRoute: () => rootRoute, path: '/gym', component: lazyRouteComponent(() => import('./pages/Gym.btsx')) })
 const effectJsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/gym/effect-js', component: lazyRouteComponent(() => import('./pages/EffectJs.btsx')) })
 const effectJsLessonsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/gym/effect-js/lessons', component: lazyRouteComponent(() => import('./pages/EffectJsLessons.btsx')) })
 export const router = createRouter({
   defaultPreload: 'intent',
-  routeTree: rootRoute.addChildren([homeRoute, convertersRoute, imageConverterRoute, iconsRoute, iconFavoritesRoute, iconSetRoute, iconDetailRoute, gymRoute, effectJsRoute, effectJsLessonsRoute]),
+  routeTree: rootRoute.addChildren([homeRoute, convertersRoute, imageConverterRoute, iconsRoute.addChildren([iconSetsRoute, iconOptimizerRoute, iconListsRoute, iconFavoritesRoute, iconSetRoute, iconDetailRoute]), gymRoute, effectJsRoute, effectJsLessonsRoute]),
 })
 
 declare module '@octanejs/tanstack-router' {

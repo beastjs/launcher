@@ -1,270 +1,156 @@
-import { useEffect, useMemo, useState } from 'octane'
-import { useSvgOptimizer } from '@/hooks/use-svg-optimizer'
-import { useBlobUrl } from '@/hooks/use-blob-url'
-import { useCopy } from '@/hooks/use-copy'
-import { defaultSvgOptions } from '@/lib/svg-optimizer'
+import { Link } from '@octanejs/tanstack-router'
+import { useIconWorkspace } from '@/hooks/use-icon-workspace'
 import Button from '@/components/ui/Button.btsx'
-import { svgSymbol } from '@/lib/svg-symbol'
-import { useIconFavorites } from '@/hooks/use-icon-favorites'
-import { iconKey } from '@/lib/icon-favorites'
-import { getSvgElementSnippet } from '@/lib/iconify'
-import { favoriteListName, prepareFavoriteIcons } from '@/lib/favorite-icon-import'
-import { customIconSetStorageKey, customIconListsStorageKey, readCustomIconLists, createCustomIconList, validCustomIconName, iconSetZip, iconSetTypeScript, type CustomIcon, type CustomIconSet } from '@/lib/custom-icon-set'
+import Checkbox from '@/components/ui/checkbox.btsx'
+import ScrubField from '@/components/ui/scrubfield.btsx'
+import Icon from "../lib/icons/Icon.btsx";
+import type { SvgOptimizationResult } from '../lib/svg-optimizer.ts'
+import { recentCustomIcons } from '@/lib/custom-icon-set'
 
 module
   const bytesLabel = (bytes: number) => bytes < 1024 ? `${bytes} B` : `${(bytes / 1024).toFixed(2)} KB`
 
+module
+  interface HeaderSectionProps {
+    options: { currentColor: boolean; viewBoxSize: number; precision: number; multipass: boolean; removeDimensions: boolean; pretty: boolean }
+    setOptions: (next: { currentColor: boolean; viewBoxSize: number; precision: number; multipass: boolean; removeDimensions: boolean; pretty: boolean } | ((prev: { currentColor: boolean; viewBoxSize: number; precision: number; multipass: boolean; removeDimensions: boolean; pretty: boolean }) => { currentColor: boolean; viewBoxSize: number; precision: number; multipass: boolean; removeDimensions: boolean; pretty: boolean })) => void
+    autoOptimize: boolean
+    setAutoOptimize: (next: boolean | ((prev: boolean) => boolean)) => void
+    setManualRequest: (next: { source: string; options: { currentColor: boolean; viewBoxSize: number; precision: number; multipass: boolean; removeDimensions: boolean; pretty: boolean } } | ((prev: { source: string; options: { currentColor: boolean; viewBoxSize: number; precision: number; multipass: boolean; removeDimensions: boolean; pretty: boolean } } | null) => { source: string; options: { currentColor: boolean; viewBoxSize: number; precision: number; multipass: boolean; removeDimensions: boolean; pretty: boolean } } | null) | null) => void
+  }
+
+component HeaderSection
+  props { options, setOptions, autoOptimize, setAutoOptimize, setManualRequest }: HeaderSectionProps
+  div(className="mb-5 flex w-full flex-wrap items-center justify-between gap-3")
+    header
+      h2#paste-svg-heading(className="text-lg font-semibold") Optimizer
+    div(className="flex flex-wrap items-center gap-x-5 gap-y-2")
+      ScrubField(label="ViewBox" accent='var(--accent)' value={options.viewBoxSize} min={16} max={64} step={4} size="sm" showDirty={false} chipColor="var(--surface)" onChange={(viewBoxSize: number) => setOptions(current => ({ ...current, viewBoxSize }))})
+      ScrubField(label="Precision" accent='#f52240' value={options.precision} min={0} max={6} step={1} fineMultiplier={1} size="sm" showDirty={false} chipColor="var(--surface)" onChange={(value: number) => setOptions(current => ({ ...current, precision: Math.round(value) }))})
+      Checkbox(label="Auto Optimize" checked={autoOptimize} onChange={(enabled: boolean) => { setAutoOptimize(enabled); if (!enabled) setManualRequest(null) }} boxSize={16} boxRadius={4} fontSize={12} strike="none" doneOpacity={1})
+      Checkbox(label="currentColor" checked={options.currentColor} onChange={(currentColor: boolean) => setOptions(current => ({ ...current, currentColor }))} boxSize={16} boxRadius={4} fontSize={12} strike="none" doneOpacity={1})
+      Checkbox(label="Multipass" checked={options.multipass} onChange={(multipass: boolean) => setOptions(current => ({ ...current, multipass }))} boxSize={16} boxRadius={4} fontSize={12} strike="none" doneOpacity={1})
+      Checkbox(label="Remove width and height" checked={options.removeDimensions} onChange={(removeDimensions: boolean) => setOptions(current => ({ ...current, removeDimensions }))} boxSize={16} boxRadius={4} fontSize={12} strike="none" doneOpacity={1})
+      Checkbox(label="Format Output" checked={options.pretty} onChange={(pretty: boolean) => setOptions(current => ({ ...current, pretty }))} boxSize={16} boxRadius={4} fontSize={12} strike="none" doneOpacity={1})
+
+module
+  interface ActionsColumnProps {
+    pasting: boolean
+    paste: () => Promise<void>
+    working: boolean
+    source: string
+    optimize: () => void
+    result: SvgOptimizationResult | null
+    copy: (name: string, text: string) => Promise<boolean>
+    copiedName: string | null
+    resultUrl: string | null
+    setSource: (next: string | ((prev: string) => string)) => void
+    setPasteError: (next: string | ((prev: string | null) => string | null) | null) => void
+    autoOptimize: boolean
+    error: string | null
+    pasteError: string | null
+    copyError: string | null
+  }
+
+component ActionsColumn
+  props { pasting, paste, working, source, optimize, result, copy, copiedName, resultUrl, setSource, setPasteError, autoOptimize, error, pasteError, copyError }: ActionsColumnProps
+  div(className='flex flex-col gap-3')
+    Button(label="Paste SVG" pending={pasting} pendingLabel="Pasting…" disabled={pasting} onClick={() => void paste()})
+      Icon(name='paste')
+    Button(label="Optimize" pending={working} pendingLabel="Optimizing…" disabled={!source.trim() || working} onClick={optimize})
+      Icon(name='wrench')
+    div(className='grid grid-cols-3 gap-1')
+      Button(disabled={!result || working} onClick={() => { if (result) void copy(result.svg, result.svg) }} variant='ghost')
+        Icon(name={copiedName === result?.svg ? 'check-circle' : 'copy'})
+      if resultUrl && result && !working
+        Button(type="a" href={resultUrl} download="optimized.svg" variant="ghost")
+          Icon(name='download')
+      Button(onClick={() => { setSource(''); setPasteError(null) }} disabled={!source} variant="ghost")
+        Icon(name='clear')
+    p(className="mt-4 text-xs text-muted-foreground" role="status" aria-live="polite") #{working ? 'Optimizing SVG…' : result ? `${bytesLabel(result.originalBytes)} → ${bytesLabel(result.optimizedBytes)} ` : !autoOptimize && source.trim() ? 'Auto optimize is off.' : 'Ready to optimize'}
+    p(className="mt-4 text-xs text-muted-foreground" role="status" aria-live="polite") #{ result && `${Math.abs(result.savings).toFixed(1)}% ${result.savings >= 0 ? 'smaller' : 'larger'}`}
+    if error
+      p(className="mt-3 whitespace-pre-wrap break-words text-xs text-destructive" role="alert") #{error}
+    if pasteError
+      p(className="mt-3 text-xs text-destructive" role="alert") #{pasteError}
+    if copyError
+      p(className="mt-3 text-xs text-destructive" role="alert") #{copyError}
+
+module
+  interface OriginalColumnProps {
+    source: string
+    setSource: (next: string | ((prev: string) => string)) => void
+    sourceUrl: string | null
+  }
+
+component OriginalColumn
+  props { source, setSource, sourceUrl }: OriginalColumnProps
+  div(className="min-w-0 col-span-3")
+    div(className="mb-2 flex items-center justify-between gap-3")
+      label(for="paste-svg-source" className="text-xs font-medium") Original SVG
+    textarea#paste-svg-source(value={source} onInput={(event: Event) => setSource((event.currentTarget as HTMLTextAreaElement).value)} placeholder={'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">…</svg>'} spellCheck={false} rows={9} className="w-full resize-y rounded-xl border border-border/25 bg-background p-3 font-mono text-xs leading-5 outline-none focus:ring-2 focus:ring-ring")
+    div(className="mt-3 grid h-32 place-items-center rounded-xl dark:bg-muted-foreground p-4")
+      if sourceUrl
+        img(src={sourceUrl} alt="Original SVG preview" className="size-24 object-contain")
+      else
+        span(className="text-xs text-neutral-500") Paste an SVG to get started
+
+module
+  interface OptimizedColumnProps {
+    result: SvgOptimizationResult | null
+    resultUrl: string | null
+  }
+
+component OptimizedColumn
+  props { result, resultUrl }: OptimizedColumnProps
+  div(className="min-w-0 col-span-3")
+    label(for="paste-svg-result" className="mb-2 block text-xs font-medium") Optimized SVG
+    textarea#paste-svg-result(value={result?.svg ?? ''} readOnly={true} spellCheck={false} rows={9} placeholder="Optimized markup will appear here" className="w-full resize-y rounded-xl border border-border/25 bg-background p-3 font-mono text-xs leading-5 outline-none focus:ring-2 focus:ring-ring")
+    div(className="mt-3 grid h-32 place-items-center rounded-xl dark:bg-muted-foreground p-4")
+      if resultUrl
+        img(src={resultUrl} alt="Optimized SVG preview" className="size-24 object-contain")
+      else
+        span(className="text-xs text-neutral-500") Preview will appear here
+
 props {}:{}
 setup
-  const [source, setSource] = useState('')
-  const [options, setOptions] = useState({ ...defaultSvgOptions, currentColor: true, viewBoxSize: 24 })
-  const [autoOptimize, setAutoOptimize] = useState(true)
-  const [manualRequest, setManualRequest] = useState<{ source: string; options: typeof options } | null>(null)
-  const requestMatches = manualRequest?.source === source && JSON.stringify(manualRequest?.options) === JSON.stringify(options)
-  const optimizerSource = autoOptimize || requestMatches ? source : ''
-  const { result, error, working, retry } = useSvgOptimizer(optimizerSource.trim() ? optimizerSource : '', options)
-  const optimize = () => { setManualRequest({ source, options: { ...options } }); retry() }
-  const sourceBlob = useMemo(() => source.trim() ? new Blob([source], { type: 'image/svg+xml' }) : null, [source])
-  const resultBlob = useMemo(() => result ? new Blob([result.svg], { type: 'image/svg+xml' }) : null, [result])
-  const sourceUrl = useBlobUrl(sourceBlob)
-  const resultUrl = useBlobUrl(resultBlob)
-  const { copy, copiedName, error: copyError } = useCopy()
-  const [pasteError, setPasteError] = useState<string | null>(null)
-  const [pasting, setPasting] = useState(false)
-  const paste = async () => {
-    setPasting(true)
-    setPasteError(null)
-    try {
-      if (!navigator.clipboard?.readText) throw new Error('Clipboard is unavailable. Paste directly into the source field.')
-      const text = await navigator.clipboard.readText()
-      if (!text.trim()) throw new Error('The clipboard is empty. Copy an SVG first.')
-      setSource(text)
-    } catch { setPasteError('Could not paste from the clipboard. Paste directly into the source field.') }
-    finally { setPasting(false) }
-  }
-  const symbolData = useMemo(() => result ? svgSymbol(result.svg) : null, [result])
-  const symbol = symbolData?.symbol ?? ''
-  const [iconLists, setIconLists] = useState(() => {
-    try { return readCustomIconLists(localStorage.getItem(customIconListsStorageKey), localStorage.getItem(customIconSetStorageKey)) }
-    catch { return readCustomIconLists(null) }
-  })
-  const iconSet = iconLists.lists.find(list => list.name === iconLists.selected) ?? iconLists.lists[0]
-  const setIconSet = (update: (current: CustomIconSet) => CustomIconSet) => {
-    setIconLists(current => ({ ...current, lists: current.lists.map(list => list.name === current.selected ? update(list) : list) }))
-  }
-  const [newListName, setNewListName] = useState('')
-  const [iconName, setIconName] = useState('')
-  const [editingName, setEditingName] = useState<string | null>(null)
-  const [setError, setSetError] = useState<string | null>(null)
-  const [setMessage, setSetMessage] = useState<string | null>(null)
-  const [storageError, setStorageError] = useState<string | null>(null)
-  const { favorites } = useIconFavorites()
-  const [favoriteQuery, setFavoriteQuery] = useState('')
-  const [selectedFavorites, setSelectedFavorites] = useState<string[]>([])
-  const [importingFavorites, setImportingFavorites] = useState(false)
-  const visibleFavorites = favorites.filter(icon => iconKey(icon).includes(favoriteQuery.trim().toLowerCase()))
-  const pickedFavorites = favorites.filter(icon => selectedFavorites.includes(iconKey(icon)))
-  const togglePickedFavorite = (key: string) => setSelectedFavorites(current => current.includes(key) ? current.filter(item => item !== key) : [...current, key])
-  const addFavorites = async () => {
-    const target = iconSet.name
-    const pending = pickedFavorites.filter(icon => !iconSet.icons.some(item => item.name === favoriteListName(icon)))
-    setImportingFavorites(true)
-    setSetError(null)
-    setSetMessage(null)
-    try {
-      const prepared = await prepareFavoriteIcons(pending, autoOptimize ? { ...options } : undefined)
-      setIconLists(current => ({ ...current, lists: current.lists.map(list => list.name === target ? { ...list, icons: [...list.icons, ...prepared.filter(icon => !list.icons.some(item => item.name === icon.name))] } : list) }))
-      setSelectedFavorites([])
-      setSetMessage(`${prepared.length} ${prepared.length === 1 ? 'favorite' : 'favorites'} added to ${target}.${pickedFavorites.length > pending.length ? ' Favorites already in this list were skipped.' : ''}`)
-    } catch (failure) { setSetError(failure instanceof Error ? failure.message : 'Could not add favorites.') }
-    finally { setImportingFavorites(false) }
-  }
-  useEffect(() => {
-    try { localStorage.setItem(customIconListsStorageKey, JSON.stringify(iconLists)); setStorageError(null) }
-    catch { setStorageError('Could not save this set in your browser. Download it to keep a copy.') }
-  }, [iconLists])
-  const selectList = (name: string) => {
-    setIconLists(current => ({ ...current, selected: name }))
-    setEditingName(null)
-    setSetError(null)
-    setSetMessage(null)
-  }
-  const createList = () => {
-    setSetError(null)
-    try {
-      const next = createCustomIconList(iconLists, newListName)
-      setIconLists(next)
-      setNewListName('')
-      setEditingName(null)
-      setSetMessage(`${next.selected} created. Add your icon below.`)
-    } catch (failure) { setSetError(failure instanceof Error ? failure.message : 'Could not create list.') }
-  }
-  const saveIcon = () => {
-    if (!result || working || !symbolData) return
-    const name = iconName.trim()
-    setSetError(null)
-    setSetMessage(null)
-    if (!validCustomIconName(name)) { setSetError('Use lowercase letters, numbers, and dashes for the icon name.'); return }
-    if (iconSet.icons.some(icon => icon.name === name && icon.name !== editingName)) { setSetError('This icon name is already in the set. Choose another name or edit that icon.'); return }
-    const icon: CustomIcon = { name, svg: result.svg, ...symbolData }
-    setIconSet(current => ({ ...current, icons: [...current.icons.filter(item => item.name !== editingName), icon] }))
-    setIconName('')
-    setEditingName(null)
-    setSetMessage(`${name} saved to ${iconSet.name}.`)
-  }
-  const editIcon = (icon: CustomIcon) => {
-    setSource(icon.svg)
-    const size = Number(icon.viewBox.trim().split(/\s+/)[2])
-    setOptions(current => ({ ...current, viewBoxSize: Number.isFinite(size) && size > 0 ? size : 24, currentColor: icon.svg.includes('currentColor') }))
-    setIconName(icon.name)
-    setEditingName(icon.name)
-    setSetError(null)
-    setSetMessage(null)
-    document.getElementById('paste-svg-source')?.focus()
-  }
-  const removeIcon = (name: string) => {
-    setIconSet(current => ({ ...current, icons: current.icons.filter(icon => icon.name !== name) }))
-    if (editingName === name) { setEditingName(null); setIconName('') }
-    setSetMessage(`${name} removed from your set.`)
-  }
-  const exportSet = (format: 'svg' | 'ts') => {
-    setSetError(null)
-    try {
-      const set = { ...iconSet, name: iconSet.name.trim() }
-      const blob = format === 'svg' ? new Blob([iconSetZip(set).slice().buffer], { type: 'application/zip' }) : new Blob([iconSetTypeScript(set)], { type: 'text/typescript;charset=utf-8' })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `${set.name}.${format === 'svg' ? 'zip' : 'ts'}`
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      setTimeout(() => URL.revokeObjectURL(url), 1000)
-    } catch (failure) { setSetError(failure instanceof Error ? failure.message : 'Could not export this icon set.') }
-  }
+  const { source, setSource, options, setOptions, autoOptimize, setAutoOptimize, setManualRequest, result, error, working, optimize, sourceUrl, resultUrl, copy, copiedName, copyError, pasteError, setPasteError, pasting, paste, iconLists, selectList, iconName, setIconName, editingName, saveIcon, setEditingName, setSetError, setError, storageError, setMessage } = useIconWorkspace()
+  const recentIcons = recentCustomIcons(iconLists)
 
 section(aria-labelledby="paste-svg-heading" className="mb-10 rounded-2xl border border-border/25 bg-card p-5 sm:p-6")
-  header(className="mb-5")
-    h2#paste-svg-heading(className="text-lg font-semibold") Optimize your SVG
-    p(className="mt-2 text-sm text-muted-foreground") Paste SVG markup and optimize it with SVGO. Processing stays in your browser.
-  div(className="mb-5 flex flex-wrap items-end gap-5")
-    label(className="flex items-center gap-2 text-xs")
-      input(type="checkbox" checked={autoOptimize} onChange={(event: Event) => { const enabled = (event.currentTarget as HTMLInputElement).checked; setAutoOptimize(enabled); if (!enabled) setManualRequest(null) }} className="accent-foreground")
-      span Auto optimize
-    Button(label="Optimize" pending={working} pendingLabel="Optimizing…" disabled={!source.trim() || working} onClick={optimize})
-    label(className="w-28 text-xs text-muted-foreground")
-      span ViewBox size
-      input(type="number" min="1" step="1" value={options.viewBoxSize} onInput={(event: Event) => { const viewBoxSize = Number((event.currentTarget as HTMLInputElement).value); setOptions(current => ({ ...current, viewBoxSize })) }} className="mt-2 w-full rounded-lg border border-border/25 bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring")
-    label(className="flex items-center gap-2 text-xs")
-      input(type="checkbox" checked={options.currentColor} onChange={(event: Event) => { const currentColor = (event.currentTarget as HTMLInputElement).checked; setOptions(current => ({ ...current, currentColor })) }} className="accent-foreground")
-      span Use currentColor
-    label(className="w-44 text-xs text-muted-foreground")
-      span #{`Decimal precision · ${options.precision}`}
-      input(type="range" min="0" max="6" step="1" value={options.precision} onInput={(event: Event) => { const precision = Number((event.currentTarget as HTMLInputElement).value); setOptions(current => ({ ...current, precision })) }} className="mt-3 w-full accent-foreground")
-    label(className="flex items-center gap-2 text-xs")
-      input(type="checkbox" checked={options.multipass} onChange={(event: Event) => { const multipass = (event.currentTarget as HTMLInputElement).checked; setOptions(current => ({ ...current, multipass })) }} className="accent-foreground")
-      span Multipass
-    label(className="flex items-center gap-2 text-xs")
-      input(type="checkbox" checked={options.removeDimensions} onChange={(event: Event) => { const removeDimensions = (event.currentTarget as HTMLInputElement).checked; setOptions(current => ({ ...current, removeDimensions })) }} className="accent-foreground")
-      span Remove width and height
-    label(className="flex items-center gap-2 text-xs")
-      input(type="checkbox" checked={options.pretty} onChange={(event: Event) => { const pretty = (event.currentTarget as HTMLInputElement).checked; setOptions(current => ({ ...current, pretty })) }} className="accent-foreground")
-      span Format output
-  div(className="grid gap-5 lg:grid-cols-2")
-    div(className="min-w-0")
-      div(className="mb-2 flex items-center justify-between gap-3")
-        label(for="paste-svg-source" className="text-xs font-medium") Original SVG
-        Button(label="Paste SVG" onClick={() => void paste()} pending={pasting} pendingLabel="Pasting…" variant="ghost")
-      textarea#paste-svg-source(value={source} onInput={(event: Event) => setSource((event.currentTarget as HTMLTextAreaElement).value)} placeholder={'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">…</svg>'} spellCheck={false} rows={9} className="w-full resize-y rounded-xl border border-border/25 bg-background p-3 font-mono text-xs leading-5 outline-none focus:ring-2 focus:ring-ring")
-      div(className="mt-3 grid h-32 place-items-center rounded-xl bg-[conic-gradient(#f1f1f1_25%,#fff_0_50%,#f1f1f1_0_75%,#fff_0)] bg-[size:16px_16px] p-4")
-        if sourceUrl
-          img(src={sourceUrl} alt="Original SVG preview" className="size-24 object-contain")
-        else
-          span(className="text-xs text-neutral-500") Paste an SVG to get started
-    div(className="min-w-0")
-      label(for="paste-svg-result" className="mb-2 block text-xs font-medium") Optimized SVG
-      textarea#paste-svg-result(value={result?.svg ?? ''} readOnly={true} spellCheck={false} rows={9} placeholder="Optimized markup will appear here" className="w-full resize-y rounded-xl border border-border/25 bg-background p-3 font-mono text-xs leading-5 outline-none focus:ring-2 focus:ring-ring")
-      div(className="mt-3 grid h-32 place-items-center rounded-xl bg-[conic-gradient(#f1f1f1_25%,#fff_0_50%,#f1f1f1_0_75%,#fff_0)] bg-[size:16px_16px] p-4")
-        if resultUrl
-          img(src={resultUrl} alt="Optimized SVG preview" className="size-24 object-contain")
-        else
-          span(className="text-xs text-neutral-500") Preview will appear here
-  p(className="mt-4 text-xs text-muted-foreground" role="status" aria-live="polite") #{working ? 'Optimizing SVG…' : result ? `${bytesLabel(result.originalBytes)} → ${bytesLabel(result.optimizedBytes)} · ${Math.abs(result.savings).toFixed(1)}% ${result.savings >= 0 ? 'smaller' : 'larger'}` : !autoOptimize && source.trim() ? 'Auto optimize is off. Click Optimize to process this SVG.' : 'Ready to optimize'}
-  if error
-    p(className="mt-3 whitespace-pre-wrap break-words text-xs text-destructive" role="alert") #{error}
-  if pasteError
-    p(className="mt-3 text-xs text-destructive" role="alert") #{pasteError}
-  if copyError
-    p(className="mt-3 text-xs text-destructive" role="alert") #{copyError}
-  div(className="mt-4 flex flex-wrap gap-3")
-    Button(label={copiedName === result?.svg ? 'Copied SVG' : 'Copy optimized SVG'} disabled={!result || working} onClick={() => { if (result) void copy(result.svg, result.svg) }})
-    Button(label={copiedName === symbol && !!symbol ? 'Copied symbol' : 'Copy symbol'} disabled={!result || working} onClick={() => { if (result) void copy(symbol, symbol) }} variant="ghost")
-    if resultUrl && result && !working
-      Button(type="a" href={resultUrl} download="optimized.svg" label="Download SVG" variant="primary")
-    if error
-      Button(label="Retry optimization" onClick={optimize} disabled={working} variant="ghost")
-    Button(label="Clear" onClick={() => { setSource(''); setPasteError(null) }} disabled={!source} variant="ghost")
-
-  section(aria-labelledby="custom-icon-set-heading" className="mt-6 border-t border-border/25 pt-6")
-    header(className="mb-4")
-      h3#custom-icon-set-heading(className="text-base font-semibold") Your icon lists
-      p(className="mt-2 text-xs leading-5 text-muted-foreground") Choose an existing list or create a new one, then name and add your optimized SVG. Lists are saved in this browser and can be downloaded as SVG folders or TypeScript symbols.
-    div(className="flex flex-wrap items-end gap-3")
-      label(className="min-w-0 flex-1 text-xs text-muted-foreground")
-        span Icon list
-        select(value={iconLists.selected} onChange={(event: Event) => selectList((event.currentTarget as HTMLSelectElement).value)} className="mt-2 w-full rounded-lg border border-border/25 bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring")
-          each list in iconLists.lists key list.name
-            option(value={list.name}) #{`${list.name} (${list.icons.length})`}
-      label(className="min-w-0 flex-1 text-xs text-muted-foreground")
-        span New list name
-        input(type="text" value={newListName} placeholder="my-new-icons" onInput={(event: Event) => { setNewListName((event.currentTarget as HTMLInputElement).value); setSetError(null) }} className="mt-2 w-full rounded-lg border border-border/25 bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring")
-      Button(label="Create list" disabled={!newListName.trim()} onClick={createList})
-    div(className="mt-4 flex flex-wrap items-end gap-3")
-      label(className="min-w-0 flex-1 text-xs text-muted-foreground")
-        span Icon name
-        input(type="text" value={iconName} placeholder="arrow-right" onInput={(event: Event) => { setIconName((event.currentTarget as HTMLInputElement).value); setSetError(null) }} className="mt-2 w-full rounded-lg border border-border/25 bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring")
-      Button(label={editingName ? 'Save icon changes' : 'Add to list'} disabled={!result || working || !iconName.trim()} onClick={saveIcon})
+  HeaderSection(options={options} setOptions={setOptions} autoOptimize={autoOptimize} setAutoOptimize={setAutoOptimize} setManualRequest={setManualRequest})
+  div(className="grid gap-5 lg:grid-cols-7 border-t border-border/50 py-4")
+    OriginalColumn(source={source} setSource={setSource} sourceUrl={sourceUrl})
+    OptimizedColumn(result={result} resultUrl={resultUrl})
+    ActionsColumn(pasting={pasting} paste={paste} working={working} source={source} optimize={optimize} result={result} copy={copy} copiedName={copiedName} resultUrl={resultUrl} setSource={setSource} setPasteError={setPasteError} autoOptimize={autoOptimize} error={error} pasteError={pasteError} copyError={copyError})
+  div(className="mt-4 flex flex-wrap items-end gap-3 border-t border-border/25 pt-4")
+    label(className="min-w-40 flex-1 text-xs text-muted-foreground")
+      span Destination list
+      select(value={iconLists.selected} onChange={(event: Event) => selectList((event.currentTarget as HTMLSelectElement).value)} disabled={!!editingName} className="mt-2 w-full rounded-lg border border-border/25 bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring")
+        each list in iconLists.lists key list.name
+          option(value={list.name}) #{list.name}
+    label(className="min-w-40 flex-1 text-xs text-muted-foreground")
+      span Icon name
+      input(type="text" value={iconName} placeholder="arrow-right" onInput={(event: Event) => { setIconName((event.currentTarget as HTMLInputElement).value); setSetError(null) }} className="mt-2 w-full rounded-lg border border-border/25 bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring")
+    Button(label={editingName ? 'Save icon changes' : 'Add to list'} disabled={!result || working || !iconName.trim()} onClick={saveIcon})
     if editingName
       Button(label="Cancel edit" onClick={() => { setEditingName(null); setIconName('') }} variant="ghost")
-    div(className="mt-5 rounded-xl border border-border/25 p-4")
-      h4(className="text-sm font-medium") Pick from favorites
-      p(className="mt-2 text-xs leading-5 text-muted-foreground") Select favorites to add to the list chosen above. Names include the collection to avoid collisions. Auto optimize uses the settings above; when off, the original SVG is kept.
-      if !favorites.length
-        p(className="mt-3 text-xs text-muted-foreground") No favorites yet. Star icons in a collection to see them here.
-      else
-        div
-          label(className="mt-3 block text-xs text-muted-foreground")
-            span Search saved favorites
-            input(type="search" value={favoriteQuery} placeholder="Search by icon or collection…" onInput={(event: Event) => setFavoriteQuery((event.currentTarget as HTMLInputElement).value)} className="mt-2 w-full rounded-lg border border-border/25 bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring")
-          div(className="mt-3 grid max-h-64 gap-2 overflow-y-auto sm:grid-cols-2 xl:grid-cols-3")
-            each icon in visibleFavorites key iconKey(icon)
-              label(className="flex min-w-0 items-center gap-3 rounded-lg bg-background p-3 text-xs")
-                input(type="checkbox" checked={selectedFavorites.includes(iconKey(icon))} disabled={importingFavorites} onChange={() => togglePickedFavorite(iconKey(icon))} className="accent-foreground")
-                img(src={`data:image/svg+xml,${encodeURIComponent(getSvgElementSnippet(icon))}`} alt="" className="size-7 shrink-0")
-                span(className="truncate" title={iconKey(icon)}) #{iconKey(icon)}
-          if !visibleFavorites.length
-            p(className="mt-3 text-xs text-muted-foreground") No favorites match your search.
-          Button(label={`Add selected favorites (${pickedFavorites.length})`} pending={importingFavorites} pendingLabel="Adding favorites…" disabled={!pickedFavorites.length || importingFavorites} onClick={() => void addFavorites()} className="mt-3")
-    if setError
-      p(className="mt-3 text-xs text-destructive" role="alert") #{setError}
-    if storageError
-      p(className="mt-3 text-xs text-destructive" role="alert") #{storageError}
-    if setMessage
-      p(className="mt-3 text-xs text-muted-foreground" role="status") #{setMessage}
-    p(className="mt-5 text-xs text-muted-foreground") #{`${iconSet.icons.length} ${iconSet.icons.length === 1 ? 'icon' : 'icons'} in ${iconSet.name}`}
-    if !iconSet.icons.length
-      p(className="mt-3 rounded-xl border border-dashed border-border/25 p-5 text-sm text-muted-foreground") Optimize an SVG above, give it a name, and add it to this list.
+    Link(to="/icons/lists" className="py-2 text-xs text-muted-foreground hover:text-foreground hover:underline") Manage and download lists
+  if setError
+    p(className="mt-3 text-xs text-destructive" role="alert") #{setError}
+  if storageError
+    p(className="mt-3 text-xs text-destructive" role="alert") #{storageError}
+  if setMessage
+    p(className="mt-3 text-xs text-muted-foreground" role="status") #{setMessage}
+  section(aria-labelledby="recent-icons-heading" className="mt-5 border-t border-border/25 pt-4")
+    h3#recent-icons-heading(className="text-sm font-medium") Recently added
+    if recentIcons.length
+      ul(className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5 xl:grid-cols-10")
+        each item in recentIcons key `${item.listName}/${item.icon.name}`
+          li(className="min-w-0 rounded-lg border border-border/25 p-2" title={`${item.icon.name} · ${item.listName}`})
+            div(className="grid h-14 place-items-center rounded-md bg-white p-2")
+              img(src={`data:image/svg+xml,${encodeURIComponent(item.icon.svg)}`} alt="" className="size-8 object-contain")
+            p(className="mt-2 truncate text-xs font-medium") #{item.icon.name}
+            p(className="mt-1 truncate text-[10px] text-muted-foreground") #{item.listName}
     else
-      ul(className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3")
-        each icon in iconSet.icons key icon.name
-          li(className="flex min-w-0 items-center gap-3 rounded-xl border border-border/25 bg-background p-3")
-            div(className="grid size-12 shrink-0 place-items-center rounded-lg bg-[conic-gradient(#f1f1f1_25%,#fff_0_50%,#f1f1f1_0_75%,#fff_0)] bg-[size:12px_12px]")
-              img(src={`data:image/svg+xml,${encodeURIComponent(icon.svg)}`} alt={`${icon.name} preview`} className="size-9 object-contain")
-            div(className="min-w-0 flex-1")
-              p(className="truncate text-xs font-medium") #{icon.name}
-              p(className="mt-1 truncate font-mono text-[10px] text-muted-foreground") #{icon.viewBox}
-            Button(label="Edit" aria-label={`Edit ${icon.name}`} onClick={() => editIcon(icon)} variant="ghost")
-            Button(icon="close" size="icon" aria-label={`Remove ${icon.name}`} onClick={() => removeIcon(icon.name)} variant="ghost")
-    div(className="mt-5 flex flex-wrap gap-3")
-      Button(label="Download SVG folder (.zip)" disabled={!iconSet.icons.length} onClick={() => exportSet('svg')} variant="primary")
-      Button(label="Download symbols (.ts)" disabled={!iconSet.icons.length} onClick={() => exportSet('ts')})
+      p(className="mt-3 text-xs text-muted-foreground") Add an icon to a list to see your recent additions here.

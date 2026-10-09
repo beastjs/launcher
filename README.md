@@ -17,7 +17,7 @@ Edit `src/App.btsx` to get started. Declare typed props at the top of the BTSX
 file; the Beast bundler adapter compiles it into native TSRX and then lets Octane
 produce the browser module.
 
-The starter pins the tested `octane@0.7.1` toolchain. Run the complete local
+The project uses the Beast Rspack adapter with the installed Octane toolchain. Run the complete local
 verification before shipping:
 
 ```bash
@@ -56,8 +56,8 @@ bun run gen --rm       # select and remove a page (--remove also works)
 The generator updates `src/lib/navs.ts` and, for pages, creates a `.btsx`
 component, updates `src/pages/index.ts`, and registers a lazy route in
 `src/router.ts`. Pass `--diff` to preview diffs before confirming writes or removals.
-Vite handles these imports and reloads the app through the existing Beast plugin;
-no additional Vite plugin is required. Start it with `bun run dev`.
+Rspack handles these imports and reloads the app through the existing Beast plugin.
+Start it with `bun run dev` at `http://localhost:5173`.
 
 Choose **Card item** to add a card to an existing navigation page such as
 `/converters`. Select a destination route or scaffold a new child page. The card
@@ -80,18 +80,18 @@ The collection toolbar can load all matching icons. Star an icon to save it to
 across collections. Favorites include their SVG data and persist in this browser
 under the versioned `icon-favorites-v1` localStorage key.
 Click an icon preview or name to open `/icons/:iconSetId/:iconName`. The detail
-page optimizes it with SVGO in a Vite module worker and supports before/after
+page optimizes it with SVGO in a module worker and supports before/after
 previews, precision and formatting controls, copying, and SVG downloads.
 
-This Vite SPA does not use Next.js API routes. The old `/api/icones` proxy is
+This Rspack SPA does not use Next.js API routes. The old `/api/icones` proxy is
 unnecessary because Iconify's API supports browser requests, so the icon browser
 also works on static hosting. Server-only logic added later needs a separate
 backend or hosting function; placing `route.ts` under `src/api` does not create
-an HTTP endpoint in Vite.
+an HTTP endpoint in the dev server.
 
 ## Selected stack
 
-- Bundler: vite
+- Bundler: Rspack
 - UI: base-ui (@octanejs/base-ui)
 - Styling: Tailwind CSS v4
 
@@ -104,11 +104,17 @@ import { Button } from "@octanejs/base-ui/button";
 `repos/` is reference material only. Import runtime code from installed packages
 such as `effect`. TypeScript excludes the subtree from project discovery; the
 import guard also rejects explicit imports (including type-only imports) into it.
-Vite enforces the guard during development and builds and denies serving files
-from `repos/`.
+Rspack enforces the guard during development and builds. The dev server serves
+only the compiled app and `public/` assets, rather than the project filesystem.
 
 Run `bun run check:imports` to check the boundary independently. It also runs
 first in `bun run check`. Guard tests: `bun test scripts/checks`.
+
+`bun run build` emits the static app into `dist/`, including worker chunks,
+fonts, sounds, and the favicon. `bun run preview` serves that output at
+`http://localhost:4173` with fallback routing for nested URLs.
+Tailwind CSS v4 runs through `postcss.config.mjs`. Beast DevTools and Page Builder
+use their Rspack adapters during development.
 
 See [Effect Schema patterns](agent-patterns/effect-schema.md) for examples adapted
 from the vendored Effect 4 sources and validated with the installed dependency.

@@ -1,0 +1,4 @@
+import MyIconLists from '@/components/MyIconLists.btsx'
+
+props {}:{}
+MyIconLists

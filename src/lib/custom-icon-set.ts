@@ -1,6 +1,6 @@
 import { strToU8, zipSync } from 'fflate'
 
-export interface CustomIcon { name: string; svg: string; symbol: string; viewBox: string }
+export interface CustomIcon { name: string; svg: string; symbol: string; viewBox: string; addedAt?: number }
 export interface CustomIconSet { name: string; icons: CustomIcon[] }
 export const customIconSetStorageKey = 'custom-icon-set-v1'
 export const validCustomIconName = (name: string) => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name)
@@ -46,6 +46,17 @@ export function iconSetZip(set: CustomIconSet): Uint8Array {
 
 export interface CustomIconLists { lists: CustomIconSet[]; selected: string }
 export const customIconListsStorageKey = 'custom-icon-lists-v2'
+
+/** Older icons have no timestamp; retain their insertion order as a fallback. */
+export function recentCustomIcons(current: CustomIconLists) {
+  return current.lists.flatMap(list => list.icons.map(icon => ({ icon, listName: list.name })))
+    .reverse()
+    .sort((a, b) => {
+      const addedAt = (icon: CustomIcon) => Number.isFinite(icon.addedAt) ? icon.addedAt! : 0
+      return addedAt(b.icon) - addedAt(a.icon)
+    })
+    .slice(0, 10)
+}
 
 /** Migrate the original single-set draft without losing its icons. */
 export function readCustomIconLists(value: string | null, legacy: string | null = null): CustomIconLists {

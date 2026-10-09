@@ -1,0 +1,22 @@
+import { Outlet, useLocation } from '@octanejs/tanstack-router'
+import Tabs, { type TabItem } from '@/components/ui/Tabs.btsx'
+import { IconWorkspaceContext, useIconWorkspaceState } from '@/hooks/use-icon-workspace'
+
+module
+  const tabs: TabItem[] = [
+    { href: '/icons', icon: 'paint', label: 'Icon Sets', id: 'icon-sets', shortLabel: 'Icons' },
+    { href: '/icons/optimizer', icon: 'wrench', label: 'Optimizer', id: 'optimizer', shortLabel: 'Optimizer' },
+    { href: '/icons/favorites', icon: 'bookmark', label: 'Favorites', id: 'favorites', shortLabel: 'Favorites' },
+    { href: '/icons/lists', icon: 'book', label: 'My Icon Lists', id: 'icon-lists', shortLabel: 'My Lists' },
+  ]
+
+props {}:{}
+setup
+  const path = useLocation({ select: location => location.pathname })
+  const activeId = tabs.find(tab => tab.href !== '/icons' && path.replace(/\/$/, '') === tab.href)?.id ?? 'icon-sets'
+  const workspace = useIconWorkspaceState()
+
+IconWorkspaceContext(value={workspace})
+  section(className="mx-auto w-full max-w-7xl space-y-6 p-5 pt-2 md:max-w-full")
+    Tabs(activeId={activeId} items={tabs} label="Icon tools" className="w-full min-w-0")
+    Outlet

@@ -12,7 +12,7 @@ const evaluateNavs = (source: string) => {
   return new Function(`${js}\nreturn navGroups`)()
 }
 
-test('adds and removes a page in the actual Vite router while preserving existing routes', () => {
+test('adds and removes a page in the actual router while preserving existing routes', () => {
   const source = readFileSync(new URL('../../src/router.ts', import.meta.url), 'utf8')
   const before = listRoutes(source)
   const updated = updateRouter(source, 'Settings', '/settings')

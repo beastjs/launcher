@@ -4,8 +4,10 @@ import ImageConverter from './ImageConverter.btsx'
 import Icons from './Icons.btsx'
 import IconSet from './IconSet.btsx'
 import IconFavorites from './IconFavorites.btsx'
+import IconOptimizer from './IconOptimizer.btsx'
+import IconLists from './IconLists.btsx'
 import IconDetail from './IconDetail.btsx'
 import Gym from './Gym.btsx'
 import EffectJs from './EffectJs.btsx'
 import EffectJsLessons from './EffectJsLessons.btsx'
-export { Home, Converters, ImageConverter, Icons, IconSet, IconFavorites, IconDetail, Gym, EffectJs, EffectJsLessons }
+export { Home, Converters, ImageConverter, Icons, IconSet, IconFavorites, IconOptimizer, IconLists, IconDetail, Gym, EffectJs, EffectJsLessons }

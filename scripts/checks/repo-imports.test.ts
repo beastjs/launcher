@@ -1,6 +1,8 @@
 import { expect, test } from 'bun:test'
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { tmpdir } from 'node:os'
+import { rspack, type Stats } from '@rspack/core'
 import { checkRepoImports, isRepoPath, moduleSpecifiers, repoImportGuard } from './repo-imports'
 
 const root = resolve(import.meta.dirname, '../..')
@@ -33,12 +35,35 @@ test('rejects vendored imports in project TS and Beast files but allows the inst
   }
 })
 
-test('Vite rejects resolved vendored paths, including aliases', async () => {
-  const plugin = repoImportGuard()
-  const hook = plugin.resolveId as Function
-  const context = {
-    resolve: async () => ({ id: resolve(root, 'repos/effect/packages/effect/src/Schema.ts') }),
-    error(message: string) { throw new Error(message) }
+test('Rspack rejects resolved vendored aliases and resource queries in a real build', async () => {
+  const dir = mkdtempSync(resolve(tmpdir(), 'launcher-import-guard-'))
+  const compile = (alias: string) => new Promise<Stats>((accept, reject) => {
+    const compiler = rspack({
+      mode: 'development',
+      context: dir,
+      entry: './main.js',
+      resolve: { alias: { 'custom-alias': alias } },
+      output: { path: resolve(dir, 'dist') },
+      plugins: [repoImportGuard()],
+    })
+    compiler.run((error, stats) => {
+      compiler.close(closeError => {
+        if (error || closeError) reject(error ?? closeError)
+        else if (stats) accept(stats)
+        else reject(new Error('Rspack returned no build stats'))
+      })
+    })
+  })
+  try {
+    writeFileSync(resolve(dir, 'main.js'), 'import "custom-alias"')
+    const blocked = await compile(resolve(root, 'repos/effect/packages/effect/src/Schema.ts') + '?raw')
+    expect(blocked.hasErrors()).toBe(true)
+    expect(blocked.toString({ all: false, errors: true })).toContain('reference-only')
+
+    writeFileSync(resolve(dir, 'allowed.js'), 'export const allowed = true')
+    const allowed = await compile(resolve(dir, 'allowed.js'))
+    expect(allowed.hasErrors()).toBe(false)
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
   }
-  await expect(hook.call(context, 'custom-alias', resolve(root, 'src/main.ts'), {})).rejects.toThrow('reference-only')
 })

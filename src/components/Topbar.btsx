@@ -46,7 +46,7 @@ setup
   const pathname = useLocation({ select: location => location.pathname })
   const breadcrumbs = breadcrumbsForPath(pathname)
   const reducedMotion = useReducedMotion() === true
-header(className="sticky top-0 z-40 backdrop-blur-3xl w-full border-b border-sidebar-border")
+header(className="sticky top-0 z-40 backdrop-blur-3xl w-full border-b border-sidebar-border dark:border-surface/33")
   div(className="topbar w-full px-6 flex items-center justify-between gap-4")
     nav(aria-label="Breadcrumb" className="min-w-0 flex-1 overflow-x-auto")
       ol(className="flex w-max min-w-0 items-center gap-1 py-1 text-sm")
