@@ -1,19 +1,26 @@
 import { Link } from '@octanejs/tanstack-router'
 import HyperList from '@/components/ui/HyperList.btsx'
-import { Icon } from '@/lib/icons'
+import { Icon, type IconName } from '@/lib/icons'
 import { VectorFieldAnimation, type FieldType } from '@/lib/fields'
 import { useEffect, useRef } from 'octane'
 
 module
-  const converters = [{ id: 'image', title: 'Image Converter', description: 'Convert images to WebP, JPEG, or AVIF.', href: '/converters/image' }]
+  interface Converter {
+    id: string
+    title: string
+    description?: string
+    href: string
+    icon: IconName
+  }
+  const converters: Converter[] = [{ id: 'image', title: 'Image Converter', description: 'Convert images to WebP, JPEG, or AVIF.', href: '/converters/image', icon: 'images' }]
 
 
 component ConverterCard
-  props { id, title, description, href }: { id: string; title: string; description: string; href: string }
-  Link(to={href} className="group flex h-full flex-col rounded-2xl border border-border/30 bg-card p-6 transition-colors hover:border-accent/60 hover:bg-secondary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring")
+  props { id, title, description, href, icon }: Converter
+  Link(to={href} className="group flex h-full flex-col rounded-2xl border border-border/30 bg-card p-6 transition-colors hover:border-mac-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring")
     div(className="mb-8 flex items-center justify-between")
-      div(className="grid size-12 place-items-center rounded-xl border border-border/20 bg-background text-foreground")
-        Icon(name="mechanics" size={24})
+      div(className="grid size-12 place-items-center rounded-xl text-foreground")
+        Icon(name={icon} size={32})
       span(className="rounded-full bg-background px-2.5 py-1 font-mono text-[10px] tracking-wider text-muted-foreground uppercase") #{id}
     h2(className="text-lg font-semibold tracking-tight") #{title}
     p(className="mt-2 max-w-xs text-sm leading-6 text-muted-foreground") #{description}

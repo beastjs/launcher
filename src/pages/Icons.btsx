@@ -100,7 +100,6 @@ setup
 
 section
   div(className="mb-8 max-w-xl")
-    label(for="icon-set-id" className="mb-2 block text-xs text-muted-foreground") Add an icon set
     div(className="flex items-start gap-2")
       div(className="relative min-w-0 flex-1")
         input#icon-set-id(ref={inputRef} type="text" value={query} disabled={adding} autoComplete="off" placeholder="Search collections or enter a set ID…" onInput={(event: Event) => { setQuery((event.currentTarget as HTMLInputElement).value); setActiveIndex(0); setError(null) }} onKeyDown={onKeyDown} className="w-full rounded-xl border border-border/30 bg-card px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" role="combobox" aria-keyshortcuts="/" aria-autocomplete="list" aria-expanded={suggestions.length > 0} aria-controls="icon-set-suggestions" aria-activedescendant={suggestions[activeIndex] ? `suggestion-${activeIndex}` : undefined})
@@ -113,7 +112,7 @@ section
                     span(className="block truncate text-sm font-medium") #{suggestion[1].name ?? suggestion[0]}
                     span(className="block font-mono text-[10px] text-muted-foreground") #{suggestion[0]}
                   span(className="text-xs text-muted-foreground") #{suggestion[1].total?.toLocaleString() ?? ''}
-      Button(label="Add set" disabled={!query.trim() || adding} pending={adding} pendingLabel="Adding…" onClick={() => void add(query)} className="mt-0.5")
+      Button(label="Add set" disabled={!query.trim() || adding} pending={adding} pendingLabel="Adding…" onClick={() => void add(query)} className="" size='lg')
     if error
       p(className="mt-3 text-xs text-destructive" role="alert") #{error}
     if catalogError

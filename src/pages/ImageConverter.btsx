@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'octane'
 import { Link } from '@octanejs/tanstack-router'
-import Button from '@/components/ui/Button.btsx'
+import {Button} from '@/components/ui'
 import { Icon } from '@/lib/icons'
 import { useImageConverter, type ConversionOptions, type ConversionResult } from '@/hooks/use-image-converter'
 import { useBlobUrl } from '@/hooks/use-blob-url'
@@ -50,11 +50,11 @@ component FileCard
       Preview(url={resultUrl} label="Converted" size={result ? formatSize(result.size) : '—'} name={`Converted ${entry.file.name}`})
     if result
       div(className="mt-4 flex flex-wrap items-center justify-between gap-3")
-        div(className="text-xs text-muted-foreground")
+        div(className="flex items-center space-x-4 text-xs text-muted-foreground")
           p #{`${result.width} × ${result.height} px`}
-          p(className="mt-1") #{`${Math.abs(result.compressionRatio).toFixed(1)}% ${result.compressionRatio >= 0 ? 'smaller' : 'larger'} · ${formatSize(result.size)}`}
+          p(className="") #{`${Math.abs(result.compressionRatio).toFixed(1)}% ${result.compressionRatio >= 0 ? 'smaller' : 'larger'} · ${formatSize(result.size)}`}
         if resultUrl
-          Button(type="a" href={resultUrl} download={downloadName} label="Download image" variant="primary")
+          Button(type="a" href={resultUrl} download={downloadName} label="Download image" variant="default")
     if entry.error
       p(className="mt-4 rounded-lg bg-destructive/10 p-3 text-xs leading-5 text-destructive" role="alert") #{entry.error}
 
@@ -147,22 +147,23 @@ setup
   useEffect(() => () => { generation.current += 1 }, [])
 
 section(className="mx-auto w-full max-w-7xl md:max-w-full p-5")
-  Link(to="/converters" className="mb-4 inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring")
+  Link(to="/converters" className="mb-2 inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring")
     Icon(name="arrow-left" size={14})
-    span All converters
+    span Converters
   header(className="mb-4")
     div(className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground")
-    h1(className="text-xl font-semibold tracking-tight") Image Converter
+    h1(className="text-xl font-semibold tracking-tight sr-only") Image Converter
   div(className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]")
     div(className="min-w-0 space-y-5")
-      div(className={"relative rounded-2xl border border-dashed p-8 text-center transition-colors " + (dragging ? 'border-accent bg-accent/10' : 'border-border/40 bg-card')} onDragOver={(event: DragEvent) => { event.preventDefault(); if (!running) setDragging(true) }} onDragLeave={() => setDragging(false)} onDrop={onDrop})
-        div(className="mx-auto mb-4 grid size-12 place-items-center rounded-xl bg-secondary")
-          Icon(name="image" size={28})
-        h2(className="text-sm font-medium") Drop images here
-        p(className="mt-2 text-xs leading-5 text-muted-foreground") Select multiple PNG, JPEG, WebP, or other images your browser can open.
-        input(ref={inputRef} type="file" multiple accept="image/*" aria-label="Choose images" className="sr-only" disabled={running} onChange={onFileChange})
-        Button(id='browse-files' onClick={() => inputRef.current?.click()} disabled={running} className="absolute top-3 right-3" variant='ghost')
-          Icon(name='new-folder')
+      if !entries.length
+        div(className={"relative rounded-2xl border border-dashed p-8 text-center transition-colors " + (dragging ? 'border-accent bg-accent/10' : 'border-border/40 bg-card')} onDragOver={(event: DragEvent) => { event.preventDefault(); if (!running) setDragging(true) }} onDragLeave={() => setDragging(false)} onDrop={onDrop})
+          div(className="mx-auto mb-4 grid place-items-center")
+            Icon(name="images" size={36})
+          h2(className="text-sm font-medium") Drop images here
+          p(className="mt-2 text-xs leading-5 text-muted-foreground") Select multiple PNG, JPEG, WebP, or other images your browser can open.
+          input(ref={inputRef} type="file" multiple accept="image/*" aria-label="Choose images" className="sr-only" disabled={running} onChange={onFileChange})
+          Button(id='browse-files' onClick={() => inputRef.current?.click()} disabled={running} className="absolute top-3 right-3" variant='ghost')
+            Icon(name='new-folder')
       if entries.length
         div(className="flex items-center justify-between gap-3")
           p(className="text-xs text-muted-foreground") #{`${entries.length} ${entries.length === 1 ? 'image' : 'images'} · ${formatSize(totalSize)}`}
@@ -179,7 +180,7 @@ section(className="mx-auto w-full max-w-7xl md:max-w-full p-5")
             input(type="radio" name="image-format" value={option.value} checked={format === option.value} onChange={() => changeFormat(option.value)} className="accent-foreground")
             div
               span(className="block text-sm font-medium") #{option.label}
-              span(className="mt-0.5 block text-[11px] text-muted-foreground") #{option.description}
+              span(className="hidden mt-0.5 block text-[11px] text-muted-foreground") #{option.description}
 
       div(className="mt-6")
         Scrubfield(label="Image Quality" accent='#f52240' value={quality} min={50} max={100} step={1} fineMultiplier={1} size="md" showDirty={true} chipColor="var(--surface)" onChange={(value: number) => setQuality(current => (Math.round(value) ))} className='w-full')
@@ -201,7 +202,7 @@ section(className="mx-auto w-full max-w-7xl md:max-w-full p-5")
       if format === 'jpeg'
         p(className="mt-4 text-xs leading-5 text-muted-foreground") JPEG does not preserve transparency.
       div(className="mt-6 flex flex-col gap-2")
-        Button(label={entries.length > 1 ? `Convert ${entries.length} images` : 'Convert image'} variant="primary" className="w-full" disabled={!entries.length || running || !limitsValid} pending={running} pendingLabel={`Converting ${completed} / ${entries.length}…`} onClick={runConversion})
+        Button(label={entries.length > 1 ? `Convert ${entries.length} images` : 'Convert image'} variant="default" size='lg' className="w-full" disabled={!entries.length || running || !limitsValid} pending={running} pendingLabel={`Converting ${completed} / ${entries.length}…`} onClick={runConversion})
         if running
           fragment
             progress(value={completed} max={entries.length} aria-label="Batch conversion progress" className="mt-2 h-1.5 w-full accent-foreground")
